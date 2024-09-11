@@ -1,8 +1,6 @@
 # Fivetran Hybrid Deployment Agent
 
-Fivetran's Hybrid Deployment model enables organizations to sync data sources using Fivetran while ensuring the data never leaves the secure perimeter of the customer environment. 
-This model provides flexibility in deciding where to host data pipelines, with processing remaining  within your network while Fivetran acts as a unified control plane. When you install a hybrid deployment agent within your environment, it communicates outbound with Fivetran. 
-This agent manages the pipeline processing in your network, with configuration and monitoring still performed through the Fivetran dashboard or API. 
+Hybrid Deployment from Fivetran enables you to sync data sources using Fivetran while ensuring the data never leaves the secure perimeter of your environment. It provides flexibility in deciding where to host data pipelines, with processing remaining within your network while Fivetran acts as a unified control plane. When you install a hybrid deployment agent within your environment, it communicates outbound with Fivetran. This agent manages the pipeline processing in your network, with configuration and monitoring still performed through the Fivetran dashboard or API.
 
 For more information see the [Hybrid Deployment documentation](https://fivetran.com/docs/core-concepts/architecture/hybrid-deployment)
 

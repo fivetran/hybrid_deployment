@@ -1,12 +1,24 @@
 #!/bin/bash
 #
 #  This script is used to start the Hybrid Deployment agent using docker or podman
-#  The agent token is required in the conf/config.json
-#  
+#
+#  Requirements:
+#  - Run this script as a regular user, not root.
+#  - The agent token is required in the conf/config.json
+#  - Docker is the default runtime, if using podman use "-r podman"
+#
+#  For more information: 
+#     https://fivetran.com/docs/core-concepts/architecture/hybrid-deployment
+#
 #  usage: ./hdagent.sh [-r docker|podman] start|stop|status
 #
 # set -x
 set -e
+
+if [ "$UID" -eq 0 ]; then
+  echo "This script should not be run as root. Please run as a regular user."
+  exit 1
+fi
 
 BASE_DIR=$(pwd)
 CONFIG_FILE=conf/config.json
@@ -80,7 +92,13 @@ set_environment() {
     fi
 
     # extract controller id from token and validate
-    CONTROLLER_ID=$(echo $TOKEN | base64 -d | cut -f1 -d":")
+    DECODED_TOKEN=$(printf "%s" "$TOKEN" | base64 -d 2>/dev/null)
+    if [[ $? -ne 0 ]]; then
+        echo "Invalid token, please supply a valid token"
+        exit 1
+    fi
+
+    CONTROLLER_ID=$(printf "%s" "$DECODED_TOKEN" | cut -f1 -d:)
     if [[ $? -ne 0 ]]; then
         echo "Invalid controller-id format, please supply valid token"
         exit 1
@@ -129,6 +147,7 @@ start_agent() {
     --name controller \
     --network $CONTAINER_NETWORK \
     --env HOST_USER_HOME_DIR=$HOME \
+    --env TOKEN=$TOKEN \
     --env CONTAINER_ENV_TYPE=$CONTAINER_ENV_TYPE \
     -v $BASE_DIR/conf:/conf \
     -v $BASE_DIR/logs:/logs \

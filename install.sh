@@ -10,6 +10,11 @@
 # set -x
 set -e
 
+if [ "$UID" -eq 0 ]; then
+  echo "This script should not be run as root. Please run as a regular user."
+  exit 1
+fi
+
 if [ -z "$RUNTIME" ]; then
   echo "Error: No runtime specified. Please set the RUNTIME environment variable."
   exit 1
