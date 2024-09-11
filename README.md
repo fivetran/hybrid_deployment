@@ -28,16 +28,16 @@ The `install.sh` script will create the following directory structure under the 
 
 ```
 $HOME/fivetran         --> Agent home directory
-├── hdagent.sh         --> Helper script ot start/stop the agent container
+├── hdagent.sh         --> Helper script to start/stop the agent container
 ├── conf               --> Config file location
 │   └── config.json    --> Default config file
 ├── data               --> Persistent storage used during data pipeline processing
-├── logs               --> Log file location
+├── logs               --> Logs location
 └── tmp                --> Local temporary storage used during data pipeline processing
 ```
 
 A default configuration file `config.json` will be created in the `conf/` sub folder with the token specified.
-Only the agent TOKEN is a required parameter, with [optional parameters](https://fivetran.com/docs/core-concepts/architecture/hybrid-deployment/setup-guide#agentconfigurationparameters) listed in the documentaiton.
+Only the agent TOKEN is a required parameter, [optional parameters](https://fivetran.com/docs/core-concepts/architecture/hybrid-deployment/setup-guide#agentconfigurationparameters) listed in the documentaiton.
 
 The agent container will be started at the end of the install script.
 To manage the agent container, you can use the supplied `hdagent.sh` script.
