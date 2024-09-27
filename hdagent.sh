@@ -6,6 +6,7 @@
 #  - Run this script as a regular user, not root.
 #  - The agent token is required in the conf/config.json
 #  - Docker is the default runtime, if using podman use "-r podman"
+#  - If no runtime specified, detect if docker or podman available
 #
 #  For more information: 
 #     https://fivetran.com/docs/core-concepts/architecture/hybrid-deployment
@@ -28,6 +29,7 @@ TOKEN=""
 CONTROLLER_ID=""
 SOCKET=""
 RUN_CMD=""
+RUNTIME=""
 INTERNAL_SOCKET=""
 CONTAINER_ENV_TYPE=""
 
@@ -47,9 +49,17 @@ get_token_from_config() {
 set_environment() {
     # Set the environment depending on docker or podman 
 
+    RUN_CMD="$1"
+    
+    # ensure command is available and in path
+    if ! command -v $RUN_CMD &> /dev/null
+    then
+        echo "$RUN_CMD is not installed or not in the PATH."
+        exit 1
+    fi
+
     if [[ "$1" == "podman" ]]; then
         # podman is used
-        RUN_CMD="podman"
         CONTAINER_ENV_TYPE="podman"
         INTERNAL_SOCKET="/run/user/1000/podman/podman.sock"
         if [ "$(id -u)" -eq 0 ]; then
@@ -59,7 +69,6 @@ set_environment() {
         fi
     else 
         # docker is used
-        RUN_CMD="docker"
         CONTAINER_ENV_TYPE="docker"
         INTERNAL_SOCKET="/var/run/docker.sock"
         DOCKER_ROOT=$(docker info --format '{{.DockerRootDir}}')
@@ -74,13 +83,6 @@ set_environment() {
     # make sure socket exist
     if [ ! -S $SOCKET ]; then
         echo "Unable to detect socket for $RUN_CMD [$SOCKET]"
-        exit 1
-    fi
-
-    # ensure command is available and in path
-    if ! command -v $RUN_CMD &> /dev/null
-    then
-        echo "$RUN_CMD is not installed or not in the PATH."
         exit 1
     fi
 
@@ -159,10 +161,7 @@ start_agent() {
 }
 
 
-# use docker as default
-RUNTIME="docker"
-
-while getopts "r:" opt; do
+while getopts "r:h" opt; do
     case "$opt" in
         r)
             if [[ "$OPTARG" == "docker" || "$OPTARG" == "podman" ]]; then
@@ -190,12 +189,25 @@ fi
 
 ACTION="$1"
 
+# If no runtime specified, try docker first then podman.
+if [[ ! -n "$RUNTIME" ]]; then
+    if command -v docker &> /dev/null; then 
+        RUNTIME="docker"
+    elif command -v podman &> /dev/null; then
+        RUNTIME="podman"
+    else
+        echo "Unable to detect runtime (docker or podman)."
+        exit 1
+    fi
+    echo "Runtime: $RUNTIME"
+fi
+
 set_environment $RUNTIME
 
 # Validate the action
 case "$ACTION" in
     start)
-        echo "Starting Hybrid Deployment agent..."
+        echo "Starting Hybrid Deployment agent using $RUNTIME"
         start_agent
         ;;
     stop)
