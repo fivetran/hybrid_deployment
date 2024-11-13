@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hd-agent-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: hd-agent-config
+    {{- include "hd.labels" . | nindent 4 }}
+data:
+  {{- range $key, $value := .Values.config }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
