@@ -1,3 +1,4 @@
 values.dev.yaml
 values.qa.yaml
 values.staging.yaml
+hybrid-deployment-agent-*.tgz

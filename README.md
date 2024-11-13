@@ -8,11 +8,13 @@ Hybrid Deployment can be used with:
 * Containers (using Docker or Podman)
 * Kubernetes (Private Preview)
 
-> Note: You must have a valid agent TOKEN before you can start the agent.  The TOKEN can be obtained when you [create](https://fivetran.com/docs/core-concepts/architecture/hybrid-deployment/setup-guide#createagent) the agent in the Fivetran Dashboard.
+> Note: You must have a valid agent TOKEN before you can start the agent.  The TOKEN can be obtained when you [create](https://fivetran.com/docs/core-concepts/architecture/hybrid-deployment/setup-guide-docker-and-podman#createagent) the agent in the Fivetran Dashboard.
 
 ---
 
 ## Using Hybrid Deployment with containers
+
+For detail instructions see the [online documentation](https://fivetran.com/docs/core-concepts/architecture/hybrid-deployment/setup-guide-docker-and-podman).
 
 The following approach can be used to setup the environment. 
 
@@ -65,7 +67,7 @@ Usage:
 
 > Note: Hybrid Deployment Kubernetes support is in **Private Preview**.  
 
-Please review the requirements and detailed setup guide as outlined in the [online documentation](https://fivetran.com/docs/core-concepts/architecture/hybrid-deployment/setup-guide-kubernetes)
+Review the requirements and detailed setup guide as outlined in the [online documentation](https://fivetran.com/docs/core-concepts/architecture/hybrid-deployment/setup-guide-kubernetes)
 
 Requirements:
 * A Kubernetes environment (1.29 or above)
