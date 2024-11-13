@@ -1,0 +1,138 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  # Used by Hybrid Deployment Jobs
+  name: hd-job-sa
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: hd-job-sa
+    {{- include "hd.labels" . | nindent 4 }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  # Role that will be used by HD jobs
+  namespace: {{ .Release.Namespace }}
+  name: hd-job-role
+  labels:
+    app.kubernetes.io/name: hd-job-role
+    {{- include "hd.labels" . | nindent 4 }}
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["list", "get", "create", "update"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: hd-job-rolebinding
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: hd-job-rolebinding
+    {{- include "hd.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: hd-job-sa
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: hd-job-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  # Used by Hybrid Deployment Agent
+  name: hd-agent-sa
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: hd-agent-sa
+    {{- include "hd.labels" . | nindent 4 }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  # Role used by HD Agent
+  namespace: {{ .Release.Namespace }}
+  name: hd-agent-role
+  labels:
+    app.kubernetes.io/name: hd-agent-role
+    {{- include "hd.labels" . | nindent 4 }}
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["update", "patch"]
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get","list", "create", "delete", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  # Role used by agent to list namespaces, storage classes and volumes
+  name: {{ .Release.Name }}-cluster-list-role
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}-cluster-list-role
+    {{- include "hd.labels" . | nindent 4 }}
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["list"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["list"]
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: hd-agent-rolebinding
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: hd-agent-rolebinding
+    {{- include "hd.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: hd-agent-sa
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: hd-agent-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Release.Name }}-cluster-rolebinding
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}-cluster-rolebinding
+    {{- include "hd.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Release.Name }}-cluster-list-role
+subjects:
+  - kind: ServiceAccount
+    name: hd-agent-sa
+    namespace: {{ .Release.Namespace }}

@@ -1,0 +1,19 @@
+image: "us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/ldp-agent:production"
+image_pull_policy: "Always"
+
+config:
+  data_volume_pvc: 
+  token: 
+
+labels: {}
+node_selector: {}
+tolerations: []
+
+agent:
+  resources:
+    requests:
+      cpu: "1000m"
+      memory: "2Gi"
+    limits:
+      cpu: "4000m"
+      memory: "4Gi"
