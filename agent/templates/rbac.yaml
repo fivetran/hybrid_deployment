@@ -136,3 +136,35 @@ subjects:
   - kind: ServiceAccount
     name: hd-agent-sa
     namespace: {{ .Release.Namespace }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: hd-agent-event-reader
+  labels:
+    app.kubernetes.io/name: hd-agent-event-reader
+    {{- include "hd.labels" . | nindent 4 }}
+rules:
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: hd-agent-event-reader-binding
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: hd-agent-event-reader-binding
+    {{- include "hd.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: hd-agent-sa
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: hd-agent-event-reader
+  apiGroup: rbac.authorization.k8s.io
+
