@@ -51,7 +51,7 @@
                   "type": "string",
                   "pattern": "^[0-9]+(m)?$",
                   "description": "Requested CPU for the agent container",
-                  "default": "1"
+                  "default": "2"
                 },
                 "memory": {
                   "type": "string",

@@ -65,8 +65,6 @@ Usage:
 
 ## Using Hybrid Deployment with Kubernetes
 
-> Note: Hybrid Deployment Kubernetes support is in **Private Preview**.  
-
 Review the requirements and detailed setup guide as outlined in the [online documentation](https://fivetran.com/docs/core-concepts/architecture/hybrid-deployment/setup-guide-kubernetes)
 
 Requirements:
@@ -86,7 +84,7 @@ helm upgrade --install hd-agent \
  --namespace default \
  --set config.data_volume_pvc=YOUR_PERSISTENT_VOLUME_CLAIM \
  --set config.token="YOUR_TOKEN_HERE" \
- --version 0.1.0
+ --version 0.2.0
  ```
 
 > Notes:
