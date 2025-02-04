@@ -21,8 +21,8 @@ if [ "$UID" -eq 0 ]; then
   exit 1
 fi
 
-BASE_DIR=$(pwd)
-CONFIG_FILE=conf/config.json
+BASE_DIR=$HOME/fivetran
+CONFIG_FILE=$BASE_DIR/conf/config.json
 AGENT_IMAGE="us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/ldp-agent:production"
 CONTAINER_NETWORK="fivetran_ldp"
 TOKEN=""
@@ -154,7 +154,7 @@ start_agent() {
     -v $BASE_DIR/conf:/conf \
     -v $BASE_DIR/logs:/logs \
     -v $SOCKET:$INTERNAL_SOCKET \
-    $AGENT_IMAGE -f /conf/config.json
+    $AGENT_IMAGE -f $CONFIG_FILE
 
     sleep 3
     $RUN_CMD ps -f name="^/controller" -f label=fivetran=ldp --format "table {{.ID}}\t{{.Names}}\t{{.Status}}"
