@@ -8,5 +8,9 @@ metadata:
     {{- include "hd.labels" . | nindent 4 }}
 data:
   {{- range $key, $value := .Values.config }}
+  {{- if ne $key "token_secret_ref" }}
+  {{- if or (ne $key "token") (not $.Values.config.token_secret_ref) }}
   {{ $key }}: {{ $value | quote }}
+  {{- end }}
+  {{- end }}
   {{- end }}

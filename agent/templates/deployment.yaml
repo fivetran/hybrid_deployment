@@ -64,6 +64,13 @@ spec:
               value: {{ .Release.Namespace }}
             - name: release_name
               value: {{ .Release.Name }}
+            {{- if .Values.config.token_secret_ref }}
+            - name: token
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.config.token_secret_ref }}
+                  key: agent-token
+            {{- end }}
           envFrom:
             - configMapRef:
                 name: hd-agent-config
