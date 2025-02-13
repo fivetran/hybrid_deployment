@@ -21,7 +21,8 @@ if [ "$UID" -eq 0 ]; then
   exit 1
 fi
 
-BASE_DIR=$HOME/fivetran
+mapfile -t SEARCH_DIR < <(find / -type d -name "fivetran" 2>/dev/null)
+BASE_DIR="${SEARCH_DIR[0]}"
 CONFIG_FILE=$BASE_DIR/conf/config.json
 AGENT_IMAGE="us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/ldp-agent:production"
 CONTAINER_NETWORK="fivetran_ldp"
