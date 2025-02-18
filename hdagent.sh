@@ -21,8 +21,11 @@ if [ "$UID" -eq 0 ]; then
   exit 1
 fi
 
-BASE_DIR=$(pwd)
-CONFIG_FILE=conf/config.json
+SCRIPT_PATH="$(realpath "$0")"
+BASE_DIR="$(dirname "$SCRIPT_PATH")"
+echo -e "Base location: $BASE_DIR\n"
+
+CONFIG_FILE=$BASE_DIR/conf/config.json
 AGENT_IMAGE="us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/ldp-agent:production"
 CONTAINER_NETWORK="fivetran_ldp"
 TOKEN=""
