@@ -32,6 +32,8 @@ RUN_CMD=""
 RUNTIME=""
 INTERNAL_SOCKET=""
 CONTAINER_ENV_TYPE=""
+PROXY_HOST=""
+PROXY_PORT=0
 
 usage() {
     echo -e "Usage: $0 [-r docker|podman] start|stop|status\n"
@@ -151,6 +153,8 @@ start_agent() {
     --env HOST_USER_HOME_DIR=$HOME \
     --env TOKEN=$TOKEN \
     --env CONTAINER_ENV_TYPE=$CONTAINER_ENV_TYPE \
+    --env PROXY_HOST=$PROXY_HOST \
+    --env PROXY_PORT=$PROXY_PORT \
     -v $BASE_DIR/conf:/conf \
     -v $BASE_DIR/logs:/logs \
     -v $SOCKET:$INTERNAL_SOCKET \

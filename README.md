@@ -32,6 +32,13 @@ Use the command below with your TOKEN and selected RUNTIME (docker or podman) to
 TOKEN="YOUR_AGENT_TOKEN" RUNTIME=docker bash -c "$(curl -sL https://raw.githubusercontent.com/fivetran/hybrid_deployment/main/install.sh)"
 ```
 
+### For proxy user: Install and Start the agent
+Use the command below with your target PROXY_HOST and PROXY_PORT information with your TOKEN to install and start the agent..
+Usage:
+```
+TOKEN="YOUR_AGENT_TOKEN" PROXY_HOST="YOUR_PROXY_HOST" PROXY_PORT=YOUR_PROXY_PORT bash -c "$(curl -sL https://raw.githubusercontent.com/fivetran/hybrid_deployment/main/install.sh)"
+```
+
 The `install.sh` script will create the following directory structure under the user home followed by downloading the agent container image and starting the agent.  Directory structure will be as follow:
 
 ```
