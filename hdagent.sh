@@ -32,8 +32,6 @@ RUN_CMD=""
 RUNTIME=""
 INTERNAL_SOCKET=""
 CONTAINER_ENV_TYPE=""
-PROXY_HOST=""
-PROXY_PORT=0
 
 usage() {
     echo -e "Usage: $0 [-r docker|podman] start|stop|status\n"
@@ -140,25 +138,46 @@ start_agent() {
     set -e
 
     # create and run the agent container in background
+
+    if [ -n ${PROXY_HOST} ] && [ -n ${PROXY_PORT} ]; then
     $RUN_CMD run \
-    -d \
-    --restart "on-failure:3" \
-    --pull "always" \
-    --label fivetran=ldp \
-    --label ldp_process_id=default-controller-process-id \
-    --label ldp_controller_id=$CONTROLLER_ID \
-    --security-opt label=disable \
-    --name controller \
-    --network $CONTAINER_NETWORK \
-    --env HOST_USER_HOME_DIR=$HOME \
-    --env TOKEN=$TOKEN \
-    --env CONTAINER_ENV_TYPE=$CONTAINER_ENV_TYPE \
-    --env PROXY_HOST=$PROXY_HOST \
-    --env PROXY_PORT=$PROXY_PORT \
-    -v $BASE_DIR/conf:/conf \
-    -v $BASE_DIR/logs:/logs \
-    -v $SOCKET:$INTERNAL_SOCKET \
-    $AGENT_IMAGE -f /conf/config.json
+        -d \
+        --restart "on-failure:3" \
+        --pull "always" \
+        --label fivetran=ldp \
+        --label ldp_process_id=default-controller-process-id \
+        --label ldp_controller_id=$CONTROLLER_ID \
+        --security-opt label=disable \
+        --name controller \
+        --network $CONTAINER_NETWORK \
+        --env HOST_USER_HOME_DIR=$HOME \
+        --env TOKEN=$TOKEN \
+        --env CONTAINER_ENV_TYPE=$CONTAINER_ENV_TYPE \
+        --env PROXY_HOST=$PROXY_HOST \
+        --env PROXY_PORT=$PROXY_PORT \
+        -v $BASE_DIR/conf:/conf \
+        -v $BASE_DIR/logs:/logs \
+        -v $SOCKET:$INTERNAL_SOCKET \
+        $AGENT_IMAGE -f /conf/config.json
+    else
+    $RUN_CMD run \
+        -d \
+        --restart "on-failure:3" \
+        --pull "always" \
+        --label fivetran=ldp \
+        --label ldp_process_id=default-controller-process-id \
+        --label ldp_controller_id=$CONTROLLER_ID \
+        --security-opt label=disable \
+        --name controller \
+        --network $CONTAINER_NETWORK \
+        --env HOST_USER_HOME_DIR=$HOME \
+        --env TOKEN=$TOKEN \
+        --env CONTAINER_ENV_TYPE=$CONTAINER_ENV_TYPE \
+        -v $BASE_DIR/conf:/conf \
+        -v $BASE_DIR/logs:/logs \
+        -v $SOCKET:$INTERNAL_SOCKET \
+        $AGENT_IMAGE -f /conf/config.json
+    fi
 
     sleep 3
     $RUN_CMD ps -f name="^/controller" -f label=fivetran=ldp --format "table {{.ID}}\t{{.Names}}\t{{.Status}}"
