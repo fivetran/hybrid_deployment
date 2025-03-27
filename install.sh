@@ -83,12 +83,23 @@ if [[ -f "$CONFIG_FILE" ]]; then
        sed -i 's/{/{\n  "token": "'"$TOKEN"'",/' "$CONFIG_FILE"
     fi
 else
+    if [ -z ${PROXY_HOST} ] && [ -z ${PROXY_PORT} ]; then
     # Default new setup, create base config with token
     cat > "$CONFIG_FILE" <<EOF
 {
   "token": "$TOKEN"
 }
 EOF
+    else
+    # Default new setup, create base config with token and proxy config
+    cat > "$CONFIG_FILE" <<EOF
+{
+  "token": "$TOKEN",
+  "proxy_host": "$PROXY_HOST",
+  "proxy_port": "$PROXY_PORT"
+}
+EOF
+    fi
 fi
 
 # Start the agent
