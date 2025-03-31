@@ -37,7 +37,7 @@ Add PROXY_HOST and PROXY_PORT environment variables to connect through a proxy s
 PROXY_HOST - The hostname of the HTTP proxy server
 PROXY_PORT - The port number of the HTTP proxy server
 ```
-TOKEN="YOUR_AGENT_TOKEN" PROXY_HOST="YOUR_PROXY_HOST" PROXY_PORT="YOUR_PROXY_PORT" bash -c "$(curl -sL https://raw.githubusercontent.com/fivetran/hybrid_deployment/main/install.sh)"
+TOKEN="YOUR_AGENT_TOKEN" PROXY_HOST="YOUR_PROXY_HOST" PROXY_PORT="YOUR_PROXY_PORT" RUNTIME=docker bash -c "$(curl -sL https://raw.githubusercontent.com/fivetran/hybrid_deployment/main/install.sh)"
 ```
 
 The `install.sh` script will create the following directory structure under the user home followed by downloading the agent container image and starting the agent.  Directory structure will be as follow:
