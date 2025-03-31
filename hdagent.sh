@@ -45,19 +45,6 @@ get_token_from_config() {
     fi
 }
 
-get_proxy_host_from_config() {
-    if [[ -f "$CONFIG_FILE" ]]; then
-        grep -o '"proxy_host": *"[^"]*"' "$CONFIG_FILE" | sed 's/.*"proxy_host": *"\([^"]*\)".*/\1/'
-    fi
-}
-
-get_proxy_port_from_config() {
-    if [[ -f "$CONFIG_FILE" ]]; then
-        grep -o '"proxy_port": *"[^"]*"' "$CONFIG_FILE" | sed 's/.*"proxy_port": *"\([^"]*\)".*/\1/'
-    fi
-}
-
-
 set_environment() {
     # Set the environment depending on docker or podman 
 
@@ -117,8 +104,6 @@ set_environment() {
         echo "Invalid controller-id format, please supply valid token"
         exit 1
     fi
-    PROXY_HOST=$(get_proxy_host_from_config)
-    PROXY_PORT=$(get_proxy_port_from_config)
 }
 
 
@@ -153,7 +138,6 @@ start_agent() {
 
     # create and run the agent container in background
 
-    if [ -z ${PROXY_HOST} ] && [ -z ${PROXY_PORT} ]; then
     $RUN_CMD run \
         -d \
         --restart "on-failure:3" \
@@ -171,28 +155,6 @@ start_agent() {
         -v $BASE_DIR/logs:/logs \
         -v $SOCKET:$INTERNAL_SOCKET \
         $AGENT_IMAGE -f /conf/config.json
-    else
-    echo "Adding proxy configuration"
-    $RUN_CMD run \
-        -d \
-        --restart "on-failure:3" \
-        --pull "always" \
-        --label fivetran=ldp \
-        --label ldp_process_id=default-controller-process-id \
-        --label ldp_controller_id=$CONTROLLER_ID \
-        --security-opt label=disable \
-        --name controller \
-        --network $CONTAINER_NETWORK \
-        --env HOST_USER_HOME_DIR=$HOME \
-        --env TOKEN=$TOKEN \
-        --env CONTAINER_ENV_TYPE=$CONTAINER_ENV_TYPE \
-        --env PROXY_HOST=$PROXY_HOST \
-        --env PROXY_PORT=$PROXY_PORT \
-        -v $BASE_DIR/conf:/conf \
-        -v $BASE_DIR/logs:/logs \
-        -v $SOCKET:$INTERNAL_SOCKET \
-        $AGENT_IMAGE -f /conf/config.json
-    fi
 
     sleep 3
     $RUN_CMD ps -f name="^/controller" -f label=fivetran=ldp --format "table {{.ID}}\t{{.Names}}\t{{.Status}}"
