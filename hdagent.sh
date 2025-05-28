@@ -110,21 +110,21 @@ set_environment() {
 
 status_agent() {
     # agent container name will start with controller and label fivetran=ldp is set.
-    CONTAINER_ID=$($RUN_CMD ps -a -q -f name="^/controller" -f label=fivetran=ldp)
+    CONTAINER_ID=$($RUN_CMD ps -a -q -f name="^/?controller" -f label=fivetran=ldp)
     if [[ -z "$CONTAINER_ID" ]]; then
         echo "Agent container not found."
     else
-        $RUN_CMD ps -f name="^/controller" -f label=fivetran=ldp --format "table {{.ID}}\t{{.Names}}\t{{.Status}}"
+        $RUN_CMD ps -f name="^/?controller" -f label=fivetran=ldp --format "table {{.ID}}\t{{.Names}}\t{{.Status}}"
     fi
 }
 
 stop_agent() {
     # agent container name will start with controller and label fivetran=ldp is set.
-    CONTAINER_ID=$($RUN_CMD ps -a -q -f name="^/controller" -f label=fivetran=ldp)
+    CONTAINER_ID=$($RUN_CMD ps -a -q -f name="^/?controller" -f label=fivetran=ldp)
     if [[ -z "$CONTAINER_ID" ]]; then
         echo "Agent container not found, nothing to stop."
     else
-        $RUN_CMD ps -f name="^/controller" -f label=fivetran=ldp --format "table {{.ID}}\t{{.Names}}\t{{.Status}}"
+        $RUN_CMD ps -f name="^/?controller" -f label=fivetran=ldp --format "table {{.ID}}\t{{.Names}}\t{{.Status}}"
         echo "Stopping agent and cleaning up container"
         $RUN_CMD stop $CONTAINER_ID > /dev/null 2>&1
         $RUN_CMD rm $CONTAINER_ID > /dev/null 2>&1
@@ -157,7 +157,7 @@ start_agent() {
     $AGENT_IMAGE -f /conf/config.json
 
     sleep 3
-    $RUN_CMD ps -f name="^/controller" -f label=fivetran=ldp --format "table {{.ID}}\t{{.Names}}\t{{.Status}}"
+    $RUN_CMD ps -f name="^/?controller" -f label=fivetran=ldp --format "table {{.ID}}\t{{.Names}}\t{{.Status}}"
 }
 
 
