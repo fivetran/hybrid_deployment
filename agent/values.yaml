@@ -3,7 +3,8 @@ image_pull_policy: "Always"
 
 config:
   data_volume_pvc: 
-  token: 
+  token: # (Insecure) Use caution when specifying the token in plaintext, do not commit the token to Git
+  token_secret_ref: # (More secure) The name of an existing Kubernetes Secret containing a key named 'agent-token' whose value is the token. When set, config.token will be ignored.
 
 labels: {}
 node_selector: {}
