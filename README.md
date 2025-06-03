@@ -90,6 +90,7 @@ config:
     http_proxy: http://your-proxy:3128
     https_proxy: http://your-proxy:3128
 ```
+More information in [documentation](https://fivetran.com/docs/deployment-models/hybrid-deployment/setup-guide-kubernetes#agentconfigurationparameters)
 </details>
 
 Installation:
