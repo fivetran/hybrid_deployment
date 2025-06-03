@@ -3,7 +3,8 @@ image_pull_policy: "Always"
 
 config:
   data_volume_pvc: 
-  token: 
+  token:
+  annotations: {}
 
 labels: {}
 node_selector: {}
