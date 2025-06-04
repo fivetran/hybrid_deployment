@@ -32,6 +32,8 @@ Use the command below with your TOKEN and selected RUNTIME (docker or podman) to
 TOKEN="YOUR_AGENT_TOKEN" RUNTIME=docker bash -c "$(curl -sL https://raw.githubusercontent.com/fivetran/hybrid_deployment/main/install.sh)"
 ```
 
+#### (Optional) Configure proxy settings for agent please see [documentation](https://fivetran.com/docs/deployment-models/hybrid-deployment/setup-guide-docker-and-podman#optionalconfigureproxysettingsforlocalenvironmentandcontainerruntime)
+
 The `install.sh` script will create the following directory structure under the user home followed by downloading the agent container image and starting the agent.  Directory structure will be as follow:
 
 ```
@@ -75,8 +77,21 @@ Requirements:
 
 <details><summary>Expand for instructions on installation of agent in Kubernetes</summary>
 
-Installation:
+<details><summary>(Optional) Configure proxy settings for agent</summary>
+Add the proxy settings under config section:
 
+```bash     
+config:
+    data_volume_pvc: VOL_CLAIM_HERE
+    token: YOUR_TOKEN_HERE
+    no_proxy: localhost,127.0.0.1
+    http_proxy: http://your-proxy:3128
+    https_proxy: http://your-proxy:3128
+```
+More information in [documentation](https://fivetran.com/docs/deployment-models/hybrid-deployment/setup-guide-kubernetes#agentconfigurationparameters)
+</details>
+
+Installation:
 ```bash
 helm upgrade --install hd-agent \
  oci://us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/helm/hybrid-deployment-agent \

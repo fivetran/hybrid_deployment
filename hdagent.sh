@@ -45,7 +45,6 @@ get_token_from_config() {
     fi
 }
 
-
 set_environment() {
     # Set the environment depending on docker or podman 
 
@@ -138,23 +137,24 @@ start_agent() {
     set -e
 
     # create and run the agent container in background
+
     $RUN_CMD run \
-    -d \
-    --restart "on-failure:3" \
-    --pull "always" \
-    --label fivetran=ldp \
-    --label ldp_process_id=default-controller-process-id \
-    --label ldp_controller_id=$CONTROLLER_ID \
-    --security-opt label=disable \
-    --name controller \
-    --network $CONTAINER_NETWORK \
-    --env HOST_USER_HOME_DIR=$HOME \
-    --env TOKEN=$TOKEN \
-    --env CONTAINER_ENV_TYPE=$CONTAINER_ENV_TYPE \
-    -v $BASE_DIR/conf:/conf \
-    -v $BASE_DIR/logs:/logs \
-    -v $SOCKET:$INTERNAL_SOCKET \
-    $AGENT_IMAGE -f /conf/config.json
+        -d \
+        --restart "on-failure:3" \
+        --pull "always" \
+        --label fivetran=ldp \
+        --label ldp_process_id=default-controller-process-id \
+        --label ldp_controller_id=$CONTROLLER_ID \
+        --security-opt label=disable \
+        --name controller \
+        --network $CONTAINER_NETWORK \
+        --env HOST_USER_HOME_DIR=$HOME \
+        --env TOKEN=$TOKEN \
+        --env CONTAINER_ENV_TYPE=$CONTAINER_ENV_TYPE \
+        -v $BASE_DIR/conf:/conf \
+        -v $BASE_DIR/logs:/logs \
+        -v $SOCKET:$INTERNAL_SOCKET \
+        $AGENT_IMAGE -f /conf/config.json
 
     sleep 3
     $RUN_CMD ps -f name="^/?controller" -f label=fivetran=ldp --format "table {{.ID}}\t{{.Names}}\t{{.Status}}"
