@@ -6,7 +6,7 @@ For more information see the [Hybrid Deployment documentation](https://fivetran.
 
 Hybrid Deployment can be used with:
 * Containers (using Docker or Podman)
-* Kubernetes (Private Preview)
+* Kubernetes
 
 > Note: You must have a valid agent TOKEN before you can start the agent.  The TOKEN can be obtained when you [create](https://fivetran.com/docs/core-concepts/architecture/hybrid-deployment/setup-guide-docker-and-podman#createagent) the agent in the Fivetran Dashboard.
 
