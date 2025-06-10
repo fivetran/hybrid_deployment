@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hd-agent
+  name: {{ if .Values.config.kubernetes_agent_deployment_name }}{{ .Values.config.kubernetes_agent_deployment_name }}{{ else }}{{ .Release.Name }}{{ end }}
   namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/name: hd-agent
