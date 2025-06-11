@@ -67,7 +67,7 @@ spec:
             - name: token
               valueFrom:
                 secretKeyRef:
-                  name: {{ if .Values.config.kubernetes_agent_deployment_name }}{{ .Values.config.kubernetes_agent_deployment_name }}{{ else }}{{ .Release.Name }}{{ end }}-secret
+                  name: {{ if .Values.config.kubernetes_agent_deployment_name }}{{ .Values.config.kubernetes_agent_deployment_name }}{{ else }}{{ .Release.Name }}{{ end }}-token-secret
                   key: token
           envFrom:
             - configMapRef:
