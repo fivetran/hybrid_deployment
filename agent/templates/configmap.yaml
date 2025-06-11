@@ -8,9 +8,11 @@ metadata:
     {{- include "hd.labels" . | nindent 4 }}
 data:
 {{- range $key, $value := .Values.config }}
+  {{- if ne $key "token" }}
   {{- if kindIs "map" $value }}
   {{ $key }}: {{ $value | toJson | quote }}
   {{- else }}
   {{ $key }}: {{ $value | quote }}
+  {{- end }}
   {{- end }}
 {{- end }}
