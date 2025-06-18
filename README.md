@@ -82,11 +82,11 @@ After=network.target docker.service podman.service
 Requires=default.target
 
 [Service]
-Type=simple
+Type=oneshot
+RemainAfterExit=true
 WorkingDirectory=%h/fivetran
 ExecStart=%h/fivetran/hdagent.sh start
-Restart=on-failure
-RestartSec=10s
+ExecStop=%h/fivetran/hdagent.sh stop
 Environment=PATH=/usr/bin:/bin
 
 [Install]
@@ -114,6 +114,8 @@ podman logs controller
 ```
 sudo loginctl enable-linger $USER
 ```
+
+To make sure setting was applied run: `loginctl show-user $USER` and review `Linger` value.
 
 </details>
 
