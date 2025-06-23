@@ -163,12 +163,14 @@ start_agent() {
         $AGENT_IMAGE -f /conf/config.json
 
     sleep 3
-    $RUN_CMD ps -f name="^/?controller" -f label=fivetran=ldp --format "table {{.ID}}\t{{.Names}}\t{{.Status}}"
+    $RUN_CMD 
+     po
+     d--format "table {{.ID}}\t{{.Names}}\t{{.Status}}"
 }
 
 restart_existing_agent_if_needed() {
     # Check if a "controller" container exists (stopped or exited)
-    CONTAINER_ID=$($RUN_CMD ps -a -q -f name="^/?controller$" -f label=fivetran=ldp)
+    CONTAINER_ID=$($RUN_CMD ps -a -q -f name="^/^controller.*$" -f label=fivetran=ldp)
 
     if [[ -n "$CONTAINER_ID" ]]; then
         STATUS=$($RUN_CMD inspect --format '{{.State.Status}}' $CONTAINER_ID)
