@@ -24,6 +24,48 @@
         "token": {
           "type": "string",
           "description": "Authentication token for the agent"
+        },
+        "kubernetes_affinity": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rule": {
+                "type": "string"
+              },
+              "connectors": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              },
+              "default": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "rule"
+            ],
+            "if": {
+              "not": {
+                "properties": {
+                  "default": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "default"
+                ]
+              }
+            },
+            "then": {
+              "required": [
+                "connectors"
+              ]
+            },
+            "additionalProperties": false
+          }
         }
       },
       "required": ["data_volume_pvc", "token"]
@@ -85,8 +127,45 @@
         }
       },
       "required": ["resources"]
+    },
+    "affinity_rules": {
+      "type": "object",
+      "description": "Map of affinity rule names to their rule definitions. At least one rule name key is required when kubernetes_affinity is non-empty.",
+      "additionalProperties": {
+        "type": "object",
+        "description": "Affinity rule definition",
+        "default": {}
+      },
+      "default": {}
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "config": {
+            "properties": {
+              "kubernetes_affinity": {
+                "type": "array",
+                "minItems": 1
+              }
+            },
+            "required": ["kubernetes_affinity"]
+          }
+        }
+      },
+      "then": {
+        "required": ["affinity_rules"],
+        "properties": {
+          "affinity_rules": {
+            "type": "object",
+            "minProperties": 1
+          }
+        }
+      }
+    }
+  ],
+
   "required": ["image", "image_pull_policy", "config", "agent"],
-  "additionalProperties": true 
+  "additionalProperties": true
 }
