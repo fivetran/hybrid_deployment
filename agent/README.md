@@ -27,7 +27,7 @@ helm upgrade --install hd-agent \
  --set config.data_volume_pvc=YOUR_PERSISTENT_VOLUME_CLAIM \
  --set config.token="YOUR_TOKEN_HERE" \
  --set config.namespace=default \
- --version 0.6.0
+ --version 0.7.0
  ```
 
 > Notes:
