@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v3
       - name: Generate SHA256 hash
         run: |
-          sha256sum hdagent.sh | awk '{print $1}' > hdagent.sh.sha256
+          sha256sum hdagent.sh | cut -d' ' -f1 > hdagent.sh.sha256
       - name: Commit and push hash file
         run: |
           git config --local user.name 'github-actions[bot]'
