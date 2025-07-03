@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  generate-hash:
+  generate-hdagent-hash:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
