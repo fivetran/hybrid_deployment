@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  release_and_changelogs:
     name: Release pushed tag
     runs-on: ubuntu-22.04
     steps:
@@ -24,3 +24,39 @@ jobs:
               --repo="$GITHUB_REPOSITORY" \
               --title="${GITHUB_REPOSITORY#*/} ${tag#v}" \
               --generate-notes
+
+  release_helm_chart:
+    name: Release helm chart
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          version: '>= 363.0.0'
+
+      - name: Use gcloud CLI
+        run: gcloud info
+
+      - name: Use gcloud components update
+        run: gcloud components update
+
+      - name: Use gcloud configure-docker
+        run: gcloud auth configure-docker us-east1-docker.pkg.dev
+
+      - name: Install helm
+        run: curl -s -L https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      - name: Package chart
+        run: cd agent && /usr/local/bin/helm package .
+
+      - name: Push packaged chart to local-dev
+        run: cd agent && /usr/local/bin/helm push *.tgz oci://us-docker.pkg.dev/fivetran-wild-west/local-dev/helm
+
+      - name: Push packaged chart to public-docker-us
+        run: cd agent && /usr/local/bin/helm push *.tgz oci://us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/helm
