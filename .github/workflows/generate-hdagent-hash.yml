@@ -1,0 +1,34 @@
+name: Generate SHA256 hash for hdagent.sh
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'hdagent.sh'
+
+permissions:
+  contents: write
+
+jobs:
+  generate-hash:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Generate SHA256 hash
+        id: sha256
+        run: |
+          sha256sum hdagent.sh | awk '{print $1}' > hdagent.sh.sha256
+      - name: Commit and push hash file
+        run: |
+          git config --local user.name 'github-actions[bot]'
+          git config --local user.email 'github-actions[bot]@users.noreply.github.com'
+          git add hdagent.sh.sha256
+
+          if git diff --staged --quiet; then
+            echo "Hash is already up to date, no changes to commit."
+          else
+            git commit -m "Update hdagent.sh.sha256"
+            git push
+          fi
