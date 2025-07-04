@@ -11,7 +11,7 @@
 #  For more information: 
 #     https://fivetran.com/docs/core-concepts/architecture/hybrid-deployment
 #
-#  usage: ./hdagent.sh [-r docker|podman] start|stop|status
+#  usage: ./hdagent.sh [-r docker|podman] [-s] start|stop|status
 #
 # set -x
 set -e
@@ -22,8 +22,10 @@ if [ "$UID" -eq 0 ]; then
 fi
 
 BASE_DIR=$(pwd)
+SCRIPT_PATH="$(realpath "$0")"
 CONFIG_FILE=conf/config.json
 AGENT_IMAGE="us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/ldp-agent:production"
+SCRIPT_URL="https://raw.githubusercontent.com/fivetran/hybrid_deployment/main/hdagent.sh"
 CONTAINER_NETWORK="fivetran_ldp"
 TOKEN=""
 CONTROLLER_ID=""
@@ -32,9 +34,13 @@ RUN_CMD=""
 RUNTIME=""
 INTERNAL_SOCKET=""
 CONTAINER_ENV_TYPE=""
+SKIP_CHECKS=""
 
 usage() {
-    echo -e "Usage: $0 [-r docker|podman] start|stop|status\n"
+    echo -e "Usage: $0 [-r docker|podman] [-s] start|stop|status\n"
+    echo -e "  -r: Specify runtime (docker or podman)"
+    echo -e "  -s: Skip validation checks on agent start"
+    echo ""
     exit 1
 }
 
@@ -106,6 +112,40 @@ set_environment() {
     fi
 }
 
+validate_script_hash() {
+    echo -n "Checking if script is latest version... "
+
+    # Compute hash of the current script
+    if command -v sha256sum &> /dev/null; then
+        CURRENT_HASH=$(sha256sum "$SCRIPT_PATH" | cut -d' ' -f1)
+    else
+        echo -e "\nUnable to compute hash of the current script\n"
+        return 0
+    fi
+
+    # Fetch the latest script
+    if command -v curl &> /dev/null; then
+        LATEST_SCRIPT=$(curl -s --fail --max-time 5 --retry 1 "$SCRIPT_URL" 2>/dev/null) || true
+    elif command -v wget &> /dev/null; then
+        LATEST_SCRIPT=$(wget -qO- --timeout=5 --tries=2 "$SCRIPT_URL" 2>/dev/null) || true
+    fi
+
+    # Compute hash of the latest script if retrieved successfully
+    if [[ -n "$LATEST_SCRIPT" ]]; then
+        LATEST_HASH=$(echo "$LATEST_SCRIPT" | sha256sum | cut -d' ' -f1)
+    else
+        echo -e "\nUnable to retrieve the latest script\n"
+        return 0
+    fi
+
+    # Compare current hash with latest hash
+    if [[ "$CURRENT_HASH" != "$LATEST_HASH" ]]; then
+        echo -e "\n\n** WARNING: This script may be outdated or modified **"
+        echo -e "To ensure proper agent functioning, please use the latest script at $SCRIPT_URL\n"
+    else
+        echo -e "OK\n"
+    fi
+}
 
 status_agent() {
     # agent container name will start with controller and label fivetran=ldp is set.
@@ -161,7 +201,7 @@ start_agent() {
 }
 
 
-while getopts "r:h" opt; do
+while getopts "r:sh" opt; do
     case "$opt" in
         r)
             if [[ "$OPTARG" == "docker" || "$OPTARG" == "podman" ]]; then
@@ -170,6 +210,9 @@ while getopts "r:h" opt; do
                 echo "Invalid runtime specified. Use 'docker' or 'podman'."
                 exit 1
             fi
+            ;;
+        s)
+            SKIP_CHECKS="true"
             ;;
         h)
             usage
@@ -203,6 +246,11 @@ if [[ ! -n "$RUNTIME" ]]; then
 fi
 
 set_environment $RUNTIME
+
+# Run checks only when starting the agent and not skipped
+if [[ "$ACTION" == "start" && "$SKIP_CHECKS" != "true" ]]; then
+    validate_script_hash
+fi
 
 # Validate the action
 case "$ACTION" in
