@@ -141,7 +141,7 @@ validate_script_hash() {
     # Compare current hash with latest hash
     if [[ "$CURRENT_HASH" != "$LATEST_HASH" ]]; then
         echo -e "\n\n** WARNING: This script may be outdated or modified **"
-        echo -e "To ensure proper agent functioning, please use the latest script at: https://raw.githubusercontent.com/fivetran/hybrid_deployment/main/hdagent.sh\n"
+        echo -e "To ensure proper agent functioning, please use the latest script at $SCRIPT_URL\n"
     else
         echo -e "OK\n"
     fi
