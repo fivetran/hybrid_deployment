@@ -96,7 +96,6 @@ function set_environment() {
     "podman")
         # podman is used
         CONTAINER_ENV_TYPE="podman"
-        INTERNAL_SOCKET="/run/user/1000/podman/podman.sock"
         # check if podman is running in rootless mode
         if podman info --format '{{.Host.Security.Rootless}}' 2>/dev/null | grep -q 'true'; then
             SOCKET="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/podman/podman.sock"
@@ -110,7 +109,6 @@ function set_environment() {
     "docker")
         # docker is used
         CONTAINER_ENV_TYPE="docker"
-        INTERNAL_SOCKET="/var/run/docker.sock"
         DOCKER_ROOT=$(docker info --format '{{.DockerRootDir}}')
         # check if docker is running in rootless mode
         if [ "$DOCKER_ROOT" == "$HOME/.local/share/docker" ]; then
@@ -187,7 +185,7 @@ function log_container_info() {
 
         ls -al $HOME/.docker > "$STATS_DIR/docker_home.log" 2>&1
         if [ -f $HOME/.docker/config.json ]; then
-            cat $HOME/.docker/config.json > "$STATS_DIR/docker_home_config.json.log" 2>&1
+            sed -E 's/("auth"[[:space:]]*:[[:space:]]*")[^"]*"/\1***"/' $HOME/.docker/config.json > "$STATS_DIR/docker_home_config.json.log" 2>&1
         fi
         ls -al /etc/docker > "$STATS_DIR/docker_etc.log" 2>&1
         if [ -f /etc/docker/daemon.json ]; then
@@ -239,30 +237,53 @@ function log_container_info() {
     fi
 }
 
+function log_base_dir_info () {
+    # Log the disk space usage in key subdirectories of the base directory
+    ls -altr $BASE_DIR > "$STATS_DIR/base_dir_file_listing.log" 2>&1
+    du -sh $BASE_DIR > "$STATS_DIR/base_dir_size.log" 2>&1
+    du -sh $BASE_DIR/* >> "$STATS_DIR/base_dir_size.log" 2>&1
+
+    if [ -n "$BASE_DIR/log" ]; then
+        ls -altr $BASE_DIR/logs > "$STATS_DIR/base_dir_logs.log" 2>&1
+    fi
+    if [ -n "$BASE_DIR/data" ]; then
+        du -sh $BASE_DIR/data > "$STATS_DIR/base_dir_data_size.log" 2>&1
+        du -sh $BASE_DIR/data/* >> "$STATS_DIR/base_dir_data_size.log" 2>&1
+        ls -altr $BASE_DIR/data > "$STATS_DIR/base_dir_data_file_listing.log" 2>&1
+        
+        du -sh $BASE_DIR/data/_samples > "$STATS_DIR/base_dir_data_samples_size.log" 2>&1
+        ls -altr $BASE_DIR/data/_samples > "$STATS_DIR/base_dir_data_samples_file_listing.log" 2>&1
+    fi
+    if [ -n "$BASE_DIR/tmp" ]; then
+        du -sh $BASE_DIR/tmp > "$STATS_DIR/base_dir_tmp_size.log" 2>&1
+        ls -altr $BASE_DIR/tmp > "$STATS_DIR/base_dir_tmp_file_listing.log" 2>&1
+    fi
+}
+
 function log_disk_space () {
     # Log the disk space usage to a file
-    df -h > "$STATS_DIR/disk_space_df_h.log" 2>&1
+    df -h > "$STATS_DIR/system_disk_space_df_h.log" 2>&1
 }
 
 function log_resources () {
     # Log the resource usage to a file
-    cat /proc/cpuinfo > "$STATS_DIR/proc_cpuinfo.log" 2>&1
-    cat /proc/meminfo > "$STATS_DIR/proc_meminfo.log" 2>&1
-    uptime > "$STATS_DIR/uptime.log" 2>&1
-    uname -a > "$STATS_DIR/uname_a.log" 2>&1
+    cat /proc/cpuinfo > "$STATS_DIR/system_proc_cpuinfo.log" 2>&1
+    cat /proc/meminfo > "$STATS_DIRsystem_proc_meminfo.log" 2>&1
+    uptime > "$STATS_DIR/system_uptime.log" 2>&1
+    uname -a > "$STATS_DIR/system_uname_a.log" 2>&1
 }
 
 function log_os_version () {
     # Log the OS version and hostname to a file
-    cat /proc/sys/kernel/hostname > "$STATS_DIR/hostname.log" 2>&1
-    cat /etc/os-release > "$STATS_DIR/os_release.log" 2>&1
+    cat /proc/sys/kernel/hostname > "$STATS_DIR/system_hostname.log" 2>&1
+    cat /etc/os-release > "$STATS_DIR/system_os_release.log" 2>&1
 }
 
 function log_network_stats () {
-    sar -n EDEV > "$STATS_DIR/sar_n_edev.log" 2>&1
-    ip -s link > "$STATS_DIR/ip_s_link.log" 2>&1
-    ip -brief addr show > "$STATS_DIR/ip_brief_addr.log" 2>&1
-    cat /etc/resolv.conf |grep -v "^#" > "$STATS_DIR/etc_resolv_conf.log" 2>&1
+    sar -n EDEV > "$STATS_DIR/system_sar_n_edev.log" 2>&1
+    ip -s link > "$STATS_DIR/system_ip_s_link.log" 2>&1
+    ip -brief addr show > "$STATS_DIR/system_ip_brief_addr.log" 2>&1
+    cat /etc/resolv.conf |grep -v "^#" > "$STATS_DIR/system_etc_resolv_conf.log" 2>&1
 }
 
 function log_user () {
@@ -280,9 +301,9 @@ function log_selinux() {
     # Log the SELinux status
     if ! command -v sestatus &> /dev/null
     then
-        echo "selinux is not installed/used or not in the PATH." > "$STATS_DIR/selinux_status.log"
+        echo "selinux is not installed/used or not in the PATH." > "$STATS_DIR/system_selinux_status.log"
     else
-        sestatus > "$STATS_DIR/selinux_status.log" 2>&1
+        sestatus > "$STATS_DIR/system_selinux_status.log" 2>&1
     fi
 }
 
@@ -290,9 +311,9 @@ function log_apparmor() {
     # Log the AppArmor status
     if ! command -v aa-status &> /dev/null
     then
-        echo "App Armor is not installed/used or not in the PATH." > "$STATS_DIR/apparmor_status.log"
+        echo "App Armor is not installed/used or not in the PATH." > "$STATS_DIR/system_apparmor_status.log"
     else
-        aa-status > "$STATS_DIR/apparmor_status.log" 2>&1
+        aa-status > "$STATS_DIR/system_apparmor_status.log" 2>&1
     fi
 }
 
@@ -303,17 +324,17 @@ function log_base_acl() {
 }
 
 function check_nofiles_inotify() {
-    ulimit -a > $STATS_DIR/ulimit_a.log 2>&1
-    ulimit -n > $STATS_DIR/ulimit_n.log 2>&1
-    cat /proc/sys/fs/inotify/max_user_watches > $STATS_DIR/proc_sys_fs_inotify_max_user_watches.log 2>&1
-    cat /proc/sys/fs/inotify/max_user_instances > $STATS_DIR/proc_sys_fs_inotify_max_user_instances.log 2>&1
-    cat /etc/security/limits.conf > $STATS_DIR/etc_limits_conf.log 2>&1
+    ulimit -a > $STATS_DIR/system_ulimit_a.log 2>&1
+    ulimit -n > $STATS_DIR/system_ulimit_n.log 2>&1
+    cat /proc/sys/fs/inotify/max_user_watches > $STATS_DIR/system_proc_sys_fs_inotify_max_user_watches.log 2>&1
+    cat /proc/sys/fs/inotify/max_user_instances > $STATS_DIR/system_proc_sys_fs_inotify_max_user_instances.log 2>&1
+    cat /etc/security/limits.conf > $STATS_DIR/system_etc_limits_conf.log 2>&1
 }
 
 function log_config () {
     # Log the config file to a file
     if [[ -f "$CONFIG_FILE" ]]; then
-        sed -E 's/("token"[[:space:]]*:[[:space:]]*")[^"]*"/\1***"/' "$CONFIG_FILE" > "$STATS_DIR/hd_config.log"
+        sed -E 's/("token"[[:space:]]*:[[:space:]]*")[^"]*"/\1***"/' "$CONFIG_FILE" > "$STATS_DIR/hdagent_config.log"
     else
         echo "Config file not found: $CONFIG_FILE"
     fi
@@ -323,21 +344,31 @@ function test_api_fivetran_com () {
     # expected: {"code":"AuthFailed","message":"Missing authorization header"} as we did not pass in token,
     # this is purely to see if we can get to the API 
 
-    curl -v https://api.fivetran.com/v1/hybrid-deployment-agents > "$STATS_DIR/api_fivetran_com.log" 2>&1
+    curl -v https://api.fivetran.com/v1/hybrid-deployment-agents > "$STATS_DIR/connectivity_api_fivetran_com.log" 2>&1
 }
 
 function test_orchestrator_com () {
     # expected: {"code":"AuthFailed","message":"Missing authorization header"} as we did not pass in token,
     # this is purely to see if we can get to the API 
 
-    curl -v https://ldp.orchestrator.fivetran.com > "$STATS_DIR/orchestrator_fivetran_com.log" 2>&1
+    curl -v https://ldp.orchestrator.fivetran.com > "$STATS_DIR/connectivity_orchestrator_fivetran_com.log" 2>&1
 }
 
 function get_conntrack_values() {
     # Review current conntrack values
-    cat /proc/sys/net/netfilter/nf_conntrack_count > "$STATS_DIR/proc_sys_net_netfilter_nf_conntrack_count.log"
-    cat /proc/sys/net/netfilter/nf_conntrack_max > "$STATS_DIR/proc_sys_net_netfilter_nf_conntrack_max.log"
+    cat /proc/sys/net/netfilter/nf_conntrack_count > "$STATS_DIR/system_proc_sys_net_netfilter_nf_conntrack_count.log"
+    cat /proc/sys/net/netfilter/nf_conntrack_max > "$STATS_DIR/system_proc_sys_net_netfilter_nf_conntrack_max.log"
     
+}
+
+function get_user_systemd_configuration() {
+    # Get the user systemd configuration in case user configured systemd for hdagent
+    ls -altr ~/.config/systemd/user > "$STATS_DIR/user_systemd_config.log" 2>&1
+    if command -v systemctl &> /dev/null; then
+        systemctl --user show-environment > "$STATS_DIR/user_systemd_environment.log" 2>&1
+        systemctl --user list-unit-files --no-pager > "$STATS_DIR/user_systemd_units.log" 2>&1
+        systemctl --user status --no-pager> "$STATS_DIR/user_systemd_status.log" 2>&1
+    fi
 }
 
 ###
@@ -401,6 +432,7 @@ echo -e "Collecting logs and stats...\n"
 check_nofiles_inotify
 log_container_info
 log_disk_space
+log_base_dir_info
 log_config
 log_resources
 log_network_stats
@@ -418,6 +450,7 @@ log_apparmor
 log_os_version
 log_base_acl
 log_user
+get_user_systemd_configuration
 test_api_fivetran_com
 test_orchestrator_com
 
