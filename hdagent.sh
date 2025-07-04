@@ -25,7 +25,7 @@ BASE_DIR=$(pwd)
 SCRIPT_PATH="$(realpath "$0")"
 CONFIG_FILE=conf/config.json
 AGENT_IMAGE="us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/ldp-agent:production"
-LATEST_HASH_URL="https://raw.githubusercontent.com/fivetran/hybrid_deployment/main/hdagent.sh.sha256"
+SCRIPT_URL="https://raw.githubusercontent.com/fivetran/hybrid_deployment/main/hdagent.sh"
 CONTAINER_NETWORK="fivetran_ldp"
 TOKEN=""
 CONTROLLER_ID=""
@@ -123,23 +123,18 @@ validate_script_hash() {
         return 0
     fi
 
-    # Fetch the hash of the latest script
+    # Fetch the latest script
     if command -v curl &> /dev/null; then
-        LATEST_HASH=$(curl -s --fail --max-time 5 --retry 1 "$LATEST_HASH_URL" 2>/dev/null) || true
+        LATEST_SCRIPT=$(curl -s --fail --max-time 5 --retry 1 "$SCRIPT_URL" 2>/dev/null) || true
     elif command -v wget &> /dev/null; then
-        LATEST_HASH=$(wget -qO- --timeout=5 --tries=2 "$LATEST_HASH_URL" 2>/dev/null) || true
+        LATEST_SCRIPT=$(wget -qO- --timeout=5 --tries=2 "$SCRIPT_URL" 2>/dev/null) || true
     fi
 
-    # Clean up and validate hash if retrieved successfully
-    if [[ -n "$LATEST_HASH" ]]; then
-        LATEST_HASH=$(echo "$LATEST_HASH" | tr -d '\n\r ')
-        if [[ ! "$LATEST_HASH" =~ ^[a-f0-9]{64}$ ]]; then
-            LATEST_HASH=""
-        fi
-    fi
-
-    if [[ -z "$LATEST_HASH" ]]; then
-        echo -e "\nUnable to retrieve hash of the latest script\n"
+    # Compute hash of the latest script if retrieved successfully
+    if [[ -n "$LATEST_SCRIPT" ]]; then
+        LATEST_HASH=$(echo "$LATEST_SCRIPT" | sha256sum | cut -d' ' -f1)
+    else
+        echo -e "\nUnable to retrieve the latest script\n"
         return 0
     fi
 
