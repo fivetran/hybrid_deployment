@@ -113,7 +113,7 @@ set_environment() {
 }
 
 validate_script_hash() {
-    echo -n "Checking if script is outdated... "
+    echo -n "Checking if script is latest version... "
 
     # Compute hash of the current script
     if command -v sha256sum &> /dev/null; then
