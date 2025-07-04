@@ -37,6 +37,15 @@ else
     exit 1
 fi
 
+SELINUX_STATUS="false"
+if command -v getenforce >/dev/null 2>&1; then
+  SE_STATUS=$(getenforce)
+  if [ "$SE_STATUS" != "Disabled" ]; then
+    echo "SELinux is enabled with status: $SE_STATUS"
+    SELINUX_STATUS="true"
+  fi
+fi
+
 echo -e "Installing Hybrid Deployment Agent...\n"
 
 # Default install location is $HOME/fivetran
@@ -86,7 +95,8 @@ else
     # Default new setup, create base config with token
     cat > "$CONFIG_FILE" <<EOF
 {
-  "token": "$TOKEN"
+  "token": "$TOKEN",
+  "host_selinux_enabled": "$SELINUX_STATUS"
 }
 EOF
 fi
