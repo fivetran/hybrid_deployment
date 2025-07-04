@@ -163,9 +163,7 @@ start_agent() {
         $AGENT_IMAGE -f /conf/config.json
 
     sleep 3
-    $RUN_CMD 
-     po
-     d--format "table {{.ID}}\t{{.Names}}\t{{.Status}}"
+    $RUN_CMD ps -f name="^/?controller" -f label=fivetran=ldp --format "table {{.ID}}\t{{.Names}}\t{{.Status}}"
 }
 
 restart_existing_agent_if_needed() {
