@@ -355,14 +355,14 @@ function check_service_reachability() {
     )
 
     for url in "${endpoints[@]}"; do
-        if ! curl -sf --max-time ${TIMEOUT} -o /dev/null "$url" 2>/dev/null; then
+        if ! curl -s --max-time ${TIMEOUT} -o /dev/null "$url" 2>/dev/null; then
             local name=$(echo "$url" | sed 's|https://||' | sed 's|/.*||')
             WARNINGS+=("$name is not reachable")
         fi
     done
 
     for url in "${critical_endpoints[@]}"; do
-        if ! curl -sf --max-time ${TIMEOUT} -o /dev/null "$url" 2>/dev/null; then
+        if ! curl -s --max-time ${TIMEOUT} -o /dev/null "$url" 2>/dev/null; then
             local name=$(echo "$url" | sed 's|https://||' | sed 's|/.*||')
             ERRORS+=("$name is not reachable")
         fi
