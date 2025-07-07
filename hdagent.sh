@@ -21,6 +21,8 @@ if [ "$UID" -eq 0 ]; then
   exit 1
 fi
 
+TIMEOUT=5
+
 BASE_DIR=$(pwd)
 SCRIPT_PATH="$(realpath "$0")"
 CONFIG_FILE=conf/config.json
@@ -129,9 +131,9 @@ validate_script_hash() {
 
     # Fetch the latest script
     if command -v curl &> /dev/null; then
-        latest_script=$(curl -s --fail --max-time 5 --retry 1 "$SCRIPT_URL" 2>/dev/null) || true
+        latest_script=$(curl -sf --max-time ${TIMEOUT} --retry 1 "$SCRIPT_URL" 2>/dev/null) || true
     elif command -v wget &> /dev/null; then
-        latest_script=$(wget -qO- --timeout=5 --tries=2 "$SCRIPT_URL" 2>/dev/null) || true
+        latest_script=$(wget -qO- --timeout=${TIMEOUT} --tries=2 "$SCRIPT_URL" 2>/dev/null) || true
     fi
 
     # Compute hash of the latest script if retrieved successfully
