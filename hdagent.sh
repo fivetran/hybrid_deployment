@@ -115,31 +115,35 @@ set_environment() {
 validate_script_hash() {
     echo -n "Checking if script is latest version... "
 
+    local current_hash
+    local latest_script
+    local latest_hash
+
     # Compute hash of the current script
     if command -v sha256sum &> /dev/null; then
-        CURRENT_HASH=$(sha256sum "$SCRIPT_PATH" | cut -d' ' -f1)
+        current_hash=$(sha256sum "$SCRIPT_PATH" | cut -d' ' -f1)
     else
         echo -e "\nUnable to compute hash of the current script\n"
-        return 0
+        return
     fi
 
     # Fetch the latest script
     if command -v curl &> /dev/null; then
-        LATEST_SCRIPT=$(curl -s --fail --max-time 5 --retry 1 "$SCRIPT_URL" 2>/dev/null) || true
+        latest_script=$(curl -s --fail --max-time 5 --retry 1 "$SCRIPT_URL" 2>/dev/null) || true
     elif command -v wget &> /dev/null; then
-        LATEST_SCRIPT=$(wget -qO- --timeout=5 --tries=2 "$SCRIPT_URL" 2>/dev/null) || true
+        latest_script=$(wget -qO- --timeout=5 --tries=2 "$SCRIPT_URL" 2>/dev/null) || true
     fi
 
     # Compute hash of the latest script if retrieved successfully
-    if [[ -n "$LATEST_SCRIPT" ]]; then
-        LATEST_HASH=$(echo "$LATEST_SCRIPT" | sha256sum | cut -d' ' -f1)
+    if [[ -n "$latest_script" ]]; then
+        latest_hash=$(echo "$latest_script" | sha256sum | cut -d' ' -f1)
     else
         echo -e "\nUnable to retrieve the latest script\n"
-        return 0
+        return
     fi
 
     # Compare current hash with latest hash
-    if [[ "$CURRENT_HASH" != "$LATEST_HASH" ]]; then
+    if [[ "$current_hash" != "$latest_hash" ]]; then
         echo -e "\n\n** WARNING: This script may be outdated or modified **"
         echo -e "To ensure proper agent functioning, please use the latest script at $SCRIPT_URL\n"
     else
