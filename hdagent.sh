@@ -146,8 +146,8 @@ validate_script_hash() {
 
     # Compare current hash with latest hash
     if [[ "$current_hash" != "$latest_hash" ]]; then
-        echo -e "\n\n** WARNING: This script may be outdated or modified **"
-        echo -e "To ensure proper agent functioning, please use the latest script at $SCRIPT_URL\n"
+        echo -e "\n\n** WARNING: This hdagent.sh script may be outdated or modified **"
+        echo -e "To ensure proper agent functioning, please download and use the latest script: $SCRIPT_URL\n"
     else
         echo -e "OK\n"
     fi
