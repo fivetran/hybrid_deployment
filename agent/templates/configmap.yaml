@@ -8,9 +8,16 @@ metadata:
     {{- include "hd.labels" . | nindent 4 }}
 data:
 {{- range $key, $value := .Values.config }}
-  {{- if kindIs "map" $value }}
+  {{- if ne $key "token" }}
+    {{- if eq $key "kubernetes_affinity" }}
   {{ $key }}: {{ $value | toJson | quote }}
-  {{- else }}
+    {{- else if kindIs "map" $value }}
+  {{ $key }}: {{ $value | toJson | quote }}
+    {{- else }}
   {{ $key }}: {{ $value | quote }}
+    {{- end }}
   {{- end }}
+{{- end }}
+{{- if .Values.affinity_rules }}
+  affinity_rules: {{ .Values.affinity_rules | toJson | quote }}
 {{- end }}
