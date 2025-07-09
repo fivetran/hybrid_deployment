@@ -62,6 +62,61 @@ Usage:
 ./hdagent.sh [-r docker|podman] start|stop|status
 ```
 
+### Step 3: Use systemd to manage agent (optional)
+
+This is optional and example of how you can configure a service to start the agent.
+
+To ensure the agent is restarted on system boot, you can make use of systemd.
+During the docker or podman run command, you can adjust `--restart "on-failure:3"` to `--restart "always"` and for most this will work fine.  But in podman this may not always work as intended.
+
+To ensure the agent is started as a service, you can do the following:
+
+> Note: the steps below is for podman using rootless.  The systemd will run under the user, not root. 
+1. Stop agent first: `./hdagent.sh stop`
+2. Create a local user systemd unit file: `~/.config/systemd/user/hdagent.service` and add the following:
+
+```
+[Unit]
+Description=Fivetran Hybrid Deployment Agent
+After=network.target docker.service podman.service
+Requires=default.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+WorkingDirectory=%h/fivetran
+ExecStart=%h/fivetran/hdagent.sh start
+ExecStop=%h/fivetran/hdagent.sh stop
+Environment=PATH=/usr/bin:/bin
+
+[Install]
+WantedBy=default.target
+```
+
+3.  Reload and enable the service
+
+```
+systemctl --user daemon-reload
+systemctl --user start hdagent.service
+systemctl --user status hdagent.service
+```
+
+You can now review if the agent is running with: 
+```
+podman ps -a
+podman logs controller
+```
+
+4.  Enable lingering to make sure the services are started at boot time
+
+> Note: $USER is the unix user that will run the agent.
+
+```
+sudo loginctl enable-linger $USER
+```
+
+To make sure setting was applied run: `loginctl show-user $USER` and review `Linger` value.
+
 </details>
 
 
