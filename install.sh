@@ -43,6 +43,8 @@ echo -e "Installing Hybrid Deployment Agent...\n"
 BASE_DIR=$HOME/fivetran
 
 AGENT_URL="https://raw.githubusercontent.com/fivetran/hybrid_deployment/main/hdagent.sh"
+DEBUG_URL="https://raw.githubusercontent.com/fivetran/hybrid_deployment/main/hd-debug.sh"
+DEBUG_SCIRPT=hd-debug.sh
 AGENT_SCRIPT=hdagent.sh
 CONFIG_FILE=$BASE_DIR/conf/config.json
 CWD=$(pwd)
@@ -59,8 +61,9 @@ if [[ ! -w $BASE_DIR ]]; then
 fi
 
 cd $BASE_DIR
-mkdir -p data tmp logs conf
+mkdir -p data tmp logs stats conf
 
+# Download hdagent script
 set +e
 curl -s -f -o $AGENT_SCRIPT $AGENT_URL || {
     echo "Unable to download the file $AGENT_SCRIPT from $AGENT_URL"
@@ -68,6 +71,15 @@ curl -s -f -o $AGENT_SCRIPT $AGENT_URL || {
 }
 set -e
 chmod u+x $AGENT_SCRIPT
+
+# Download debug script
+set +e
+curl -s -f -o $DEBUG_SCIRPT $DEBUG_URL || {
+    echo "Unable to download the file $DEBUG_SCIRPT from $DEBUG_URL"
+    exit 1
+}
+set -e
+chmod u+x $DEBUG_SCIRPT
 
 if [[ -f "./config.json" ]]; then
      # upgrade old config files to new path
