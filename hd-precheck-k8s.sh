@@ -106,14 +106,16 @@ function check_endpoints_reachability() {
 
     # STEP 3: Execute the check for each endpoint inside the running pod.
     # We loop through our endpoints and use `kubectl exec` for each one.
+    echo "Verify access to endpoints..."
     for url in "${ENDPOINTS[@]}"; do
         # We use 'if kubectl exec ...' to directly check the exit code of the remote curl command.
         if ! kubectl exec --namespace="$NAMESPACE" "$POD_NAME" -- \
           curl -s -o /dev/null --connect-timeout "${CONNECT_TIMEOUT}" --max-time "${CONNECT_TIMEOUT}" --retry 3 --retry-delay 2 "$url" 2>/dev/null; then
             ERRORS+=("Unable to reach endpoint: $url")
+	else
+	  echo "${url} - OK."
         fi
     done
-
     # STEP 4: Clean up the pod.
     kubectl delete pod "$POD_NAME" --namespace="$NAMESPACE" --ignore-not-found=true > /dev/null
 }
@@ -129,13 +131,14 @@ function check_k8s_version() {
     local K8S_MAJOR
     local K8S_MINOR
 
-    K8S_SERVER_VERSION=$(kubectl version | grep "Server Version:" | awk '{print $3}')
+    K8S_SERVER_VERSION=$(kubectl version 2>/dev/null | grep "Server Version:" | awk '{print $3}')
 
     if [ -z "$K8S_SERVER_VERSION" ]; then
         echo "ERROR: Could not find 'Server Version:' in kubectl output."
         printSetupGuideLink
         exit 1
     else
+	echo "Kubernetes version: $K8S_SERVER_VERSION"
         # Remove the 'v' prefix if present
         VERSION_NUMBERS=${K8S_SERVER_VERSION#v}
         # Remove everything after the second dot (e.g., '.5+k3s1' from '1.30.5+k3s1' becomes '1.30')
@@ -170,6 +173,7 @@ function check_helm_version() {
     # Check Helm version
     local HELM_VERSION
     HELM_VERSION=$(helm version --template='{{.Version}}' | sed 's/v//')
+    echo "Helm version: $HELM_VERSION"
 
     if [ -z "$HELM_VERSION" ]; then
         ERRORS+=("Could not determine Helm version.")
@@ -205,7 +209,7 @@ function check_tool_versions() {
 }
 
 echo
-echo -n "Checking prerequisites... "
+echo -e "Checking prerequisites... \n"
 
 check_tool_versions
 check_endpoints_reachability
