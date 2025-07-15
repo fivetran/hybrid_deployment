@@ -84,7 +84,7 @@ function check_k8s_version() {
         print_setup_guide_link
         exit 1
     else
-	echo "Kubernetes version: $K8S_SERVER_VERSION"
+	      echo "Kubernetes version: $K8S_SERVER_VERSION"
         # Remove the 'v' prefix if present
         VERSION_NUMBERS=${K8S_SERVER_VERSION#v}
         # Remove everything after the second dot (e.g., '.5+k3s1' from '1.30.5+k3s1' becomes '1.30')
@@ -162,7 +162,6 @@ check_tool_versions
 
 ## print errors and warnings ##
 if [[ ${#WARNINGS[@]} -gt 0 || ${#ERRORS[@]} -gt 0 ]]; then
-    echo
     if [[ ${#WARNINGS[@]} -gt 0 ]]; then
         echo
         echo "WARNINGS:"
