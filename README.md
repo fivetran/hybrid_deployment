@@ -80,7 +80,7 @@ Requirements:
 <details><summary>(Optional) Configure proxy settings for agent</summary>
 Add the proxy settings under config section:
 
-```bash     
+```yaml 
 config:
     data_volume_pvc: VOL_CLAIM_HERE
     token: YOUR_TOKEN_HERE
@@ -103,7 +103,7 @@ Configure Node Affinity rules in values.yaml file:
 In the config section of your Helm values.yaml file, set up affinity rules that link connection IDs to specific scheduling rules.
 You can assign multiple connections to a rule, and set a default rule for any connections not listed.
 
-```bash     
+```yaml
 config:
   namespace: YOUR_NAMESPACE_HERE
   data_volume_pvc: YOUR_PERSISTENT_VOLUME_CLAIM_HERE
@@ -124,7 +124,7 @@ Define Node Affinity rules outside config section:
 
 In the affinity_rules section of your Helm values.yaml file (not within config), specify node affinity rules to determine which nodes handle specific connections. Use standard Kubernetes node affinity syntax, such as labeling nodes with HD_SIZE=SMALL or HD_SIZE=LARGE to assign connections to the right nodes.
 
-```bash     
+```yaml    
 affinity_rules:
   small:
     affinity:
