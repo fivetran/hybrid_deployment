@@ -17,6 +17,8 @@ NAMESPACE="default"
 
 # defined in templates/deployment.yaml
 HD_AGENT_DEPLOYMENT_CONTAINER_NAME="hd-agent"
+# defined in templates/configmap.yaml
+HD_AGENT_CONFIG_NAME="hd-agent-config"
 
 function usage() {
 cat <<EOF
@@ -108,6 +110,8 @@ function log_agent_info() {
     kubectl get pod "$HD_AGENT_POD_NAME" -n "$NAMESPACE" -o yaml > "$DIAGNOSTICS_DIR/pod_resource_usage.log" 2>&1
 
     kubectl get configmaps -n "$NAMESPACE" > "$DIAGNOSTICS_DIR/config_maps.log" 2>&1
+
+    kubectl get configmap "$HD_AGENT_CONFIG_NAME" -n "$NAMESPACE" -o yaml | grep -v 'token:' > "$DIAGNOSTICS_DIR/agent_config_map.log" 2>&1
     
     kubectl get secrets -n "$NAMESPACE" > "$DIAGNOSTICS_DIR/secrets.log" 2>&1
 
