@@ -91,6 +91,68 @@ config:
 More information in [documentation](https://fivetran.com/docs/deployment-models/hybrid-deployment/setup-guide-kubernetes#agentconfigurationparameters)
 </details>
 
+<details><summary>(Optional) Configure node affinity to run Hybrid Deployment jobs on specific nodes</summary>
+Kubernetes Node Affinity lets you choose which nodes run your Hybrid Deployment jobs (except the agent).
+It is more flexible than Node Selector, allowing you to set rules like running most jobs on smaller nodes and specific connectors on larger ones.
+
+> Notes:
+> You can use either Node Selector or Node Affinity, but not both at the same time. To enable Node Affinity, set 'kubernetes_node_selector_enable' to false.
+
+Configure Node Affinity rules in values.yaml file:
+
+In the config section of your Helm values.yaml file, set up affinity rules that link connection IDs to specific scheduling rules.
+You can assign multiple connections to a rule, and set a default rule for any connections not listed.
+
+```bash     
+config:
+  namespace: YOUR_NAMESPACE_HERE
+  data_volume_pvc: YOUR_PERSISTENT_VOLUME_CLAIM_HERE
+  token: YOUR_TOKEN_HERE
+  kubernetes_affinity:
+    - rule: small
+      connectors:
+        - demo_connection1
+        - demo_connection2
+      default: true
+    - rule: large
+      connectors:
+        - demo_connection3
+        - demo_connection4
+
+```
+Define Node Affinity rules outside config section:
+
+In the affinity_rules section of your Helm values.yaml file (not within config), specify node affinity rules to determine which nodes handle specific connections. Use standard Kubernetes node affinity syntax, such as labeling nodes with HD_SIZE=SMALL or HD_SIZE=LARGE to assign connections to the right nodes.
+
+```bash     
+affinity_rules:
+  small:
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+                - key: HD_SIZE
+                  operator: In
+                  values:
+                    - "SMALL"
+
+  large:
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+                - key: HD_SIZE
+                  operator: In
+                  values:
+                    - "LARGE"
+```
+More information in [documentation](https://fivetran.com/docs/deployment-models/hybrid-deployment/faq#howdoiusekubernetesnodeaffinitytorunhybriddeploymentjobsonspecificnodes)
+</details>
+
 Installation:
 ```bash
 helm upgrade --install hd-agent \
@@ -99,6 +161,7 @@ helm upgrade --install hd-agent \
  --namespace default \
  --set config.data_volume_pvc=YOUR_PERSISTENT_VOLUME_CLAIM \
  --set config.token="YOUR_TOKEN_HERE" \
+ --set config.namespace=default \
  --version 0.7.0
  ```
 
