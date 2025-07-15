@@ -12,15 +12,7 @@
 #
 # Description and Requirements:
 #   - Run this script as a regular user, not root.
-#   - This checks the reachability of critical network endpoints required by the agent,
-#     as well as the versions of Kubernetes and Helm
-
-ENDPOINTS=(
-    "https://ldp.orchestrator.fivetran.com"
-    "https://api.fivetran.com/v1/hybrid-deployment-agents"
-    "https://us-docker.pkg.dev"
-    "https://storage.googleapis.com/fivetran-metrics-log-sr"
-)
+#   - This checks the versions of Kubernetes and Helm
 
 MIN_K8S_MAJOR=1
 MIN_K8S_MINOR=29
@@ -40,7 +32,7 @@ fi
 
 function usage() {
 cat <<EOF
-  Usage: ./k8s-install.sh [-n namespace] [-h]
+  Usage: ./hd-precheck-k8s.sh [-n namespace] [-h]
 
   Options:
   -n namespace   Kubernetes namespace (defaults to 'default')
@@ -69,62 +61,16 @@ fi
 
 echo "Namespace: $NAMESPACE"
 
-POD_NAME="curl-utility-pod-$$"
-
-function printSetupGuideLink() {
+function print_setup_guide_link() {
     echo
     echo "For help with setup, please refer to the setup guide at https://fivetran.com/docs/deployment-models/hybrid-deployment/setup-guide-kubernetes"
-}
-
-function check_endpoints_reachability() {
-
-    CONNECT_TIMEOUT=30
-
-    # We use a trap to ensure the pod is deleted even if the script is interrupted.
-    trap 'echo; echo "Interrupt received, cleaning up pod..."; kubectl delete pod "$POD_NAME" --namespace="$NAMESPACE" --ignore-not-found=true --wait=false >/dev/null 2>&1; exit 1' SIGINT SIGTERM
-
-    # STEP 1: Create a single, long-running utility pod.
-    # We make it sleep for a long time so it stays alive while we run our commands.
-    if ! kubectl run "$POD_NAME" \
-      --namespace="$NAMESPACE" \
-      --image=curlimages/curl:latest \
-      --restart=Never \
-      --command -- sleep 3600 > /dev/null; then
-        ERRORS+=("Failed to create utility pod '$POD_NAME'. Please check permissions or cluster status.")
-        return 1
-    fi
-
-
-    # STEP 2: Wait for the pod to be in the "Running" state.
-    # This ensures the pod is fully initialized before we try to exec into it.
-    if ! kubectl wait --for=condition=Ready pod/"$POD_NAME" --namespace="$NAMESPACE" --timeout=120s > /dev/null; then
-        ERRORS+=("Utility pod '$POD_NAME' did not become ready in time.")
-        kubectl delete pod "$POD_NAME" --namespace="$NAMESPACE" --ignore-not-found=true > /dev/null
-        return 1
-    fi
-
-
-    # STEP 3: Execute the check for each endpoint inside the running pod.
-    # We loop through our endpoints and use `kubectl exec` for each one.
-    echo "Verify access to endpoints..."
-    for url in "${ENDPOINTS[@]}"; do
-        # We use 'if kubectl exec ...' to directly check the exit code of the remote curl command.
-        if ! kubectl exec --namespace="$NAMESPACE" "$POD_NAME" -- \
-          curl -s -o /dev/null --connect-timeout "${CONNECT_TIMEOUT}" --max-time "${CONNECT_TIMEOUT}" --retry 3 --retry-delay 2 "$url" 2>/dev/null; then
-            ERRORS+=("Unable to reach endpoint: $url")
-	else
-	  echo "${url} - OK."
-        fi
-    done
-    # STEP 4: Clean up the pod.
-    kubectl delete pod "$POD_NAME" --namespace="$NAMESPACE" --ignore-not-found=true > /dev/null
 }
 
 function check_k8s_version() {
     # Check kubectl availability
     if ! command -v kubectl &> /dev/null; then
         echo "ERROR: kubectl not found. Please install kubectl."
-        printSetupGuideLink
+        print_setup_guide_link
         exit 1
     fi
 
@@ -135,7 +81,7 @@ function check_k8s_version() {
 
     if [ -z "$K8S_SERVER_VERSION" ]; then
         echo "ERROR: Could not find 'Server Version:' in kubectl output."
-        printSetupGuideLink
+        print_setup_guide_link
         exit 1
     else
 	echo "Kubernetes version: $K8S_SERVER_VERSION"
@@ -150,7 +96,7 @@ function check_k8s_version() {
         # Validate if extracted versions are numbers
         if ! ([[ "$K8S_MAJOR" =~ ^[0-9]+$ ]] && [[ "$K8S_MINOR" =~ ^[0-9]+$ ]]); then
             echo "ERROR: Failed to extract valid major or minor version numbers from '$K8S_SERVER_VERSION'."
-            printSetupGuideLink
+            print_setup_guide_link
             exit 1
         fi
     fi
@@ -211,9 +157,10 @@ function check_tool_versions() {
 echo
 echo -e "Checking prerequisites... \n"
 
+## main check ##
 check_tool_versions
-check_endpoints_reachability
 
+## print errors and warnings ##
 if [[ ${#WARNINGS[@]} -gt 0 || ${#ERRORS[@]} -gt 0 ]]; then
     echo
     if [[ ${#WARNINGS[@]} -gt 0 ]]; then
@@ -235,7 +182,8 @@ if [[ ${#WARNINGS[@]} -gt 0 || ${#ERRORS[@]} -gt 0 ]]; then
         echo "Please resolve the above error(s) before starting the agent."
     fi
 
-    printSetupGuideLink
+    print_setup_guide_link
 else
+    echo
     echo "OK"
 fi
