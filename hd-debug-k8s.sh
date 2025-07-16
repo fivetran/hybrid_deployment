@@ -98,6 +98,9 @@ function log_agent_info() {
 
         # attempt to get the helm manifest for the deployment
         get_helm_manifest_for_deployment
+
+        kubectl version > "$DIAG_DIR/kubectl_version.log" 2>&1
+        helm version > "$DIAG_DIR/helm_version.log" 2>&1
     fi
 
     kubectl get configmaps -n "$NAMESPACE" > "$DIAG_DIR/configmap_listing.log" 2>&1
