@@ -92,7 +92,7 @@ function log_agent_info() {
         kubectl get events --field-selector involvedObject.name="$AGENT_POD" -n "$NAMESPACE" -o custom-columns=Message:.message --no-headers > "$DIAG_DIR/pod_events.log" 2>&1
         kubectl top pod "$AGENT_POD" -n "$NAMESPACE" > "$DIAG_DIR/pod_resource_usage.log" 2>&1
         kubectl get pod "$AGENT_POD" -n "$NAMESPACE" -o yaml > "$DIAG_DIR/pod_definition.log" 2>&1
-        kubectl get deployment $AGENT_DEPLOYMENT -n "$NAMESPACE" -o yaml > "$DIAG_DIR/agent_deployment.out" 2>&1
+        kubectl get deployment $AGENT_DEPLOYMENT -n "$NAMESPACE" -o yaml > "$DIAG_DIR/agent_deployment.log" 2>&1
         kubectl get pods -n "$NAMESPACE" -o wide > "$DIAG_DIR/pods.log" 2>&1
         kubectl get jobs -n "$NAMESPACE" -o wide > "$DIAG_DIR/jobs.log" 2>&1
 
