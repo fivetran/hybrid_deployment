@@ -19,28 +19,15 @@ HD_AGENT_DEPLOYMENT_CONTAINER_NAME="hd-agent"
 # defined in templates/configmap.yaml
 HD_AGENT_CONFIG_NAME="hd-agent-config"
 NAMESPACE="default"
-TEST_POD_NAME="hd-test-$$-pod"
-# For slower networks or clusters, you may want to increase the timeout
-TIMEOUT=60
-
-# Key endpoints to verify connectivity
-ENDPOINTS=(
-    "https://ldp.orchestrator.fivetran.com"
-    "https://api.fivetran.com/v1/hybrid-deployment-agents"
-    "https://us-docker.pkg.dev"
-    "https://storage.googleapis.com/fivetran-metrics-log-sr"
-)
-
 SCRIPT_PATH="$(realpath "$0")"
 BASE_DIR="$(dirname "$SCRIPT_PATH")"
 DIAG_DIR="$BASE_DIR/k8s_stats/"
-rm -r "$DIAG_DIR" 2>/dev/null
-mkdir -p "$DIAG_DIR" 2>/dev/null
-
 TIMESTAMP=$(date +%Y-%m-%d_%H-%M)
 AGENT_DEPLOYMENT=""
 AGENT_POD=""
 
+rm -r "$DIAG_DIR" 2>/dev/null
+mkdir -p "$DIAG_DIR" 2>/dev/null
 
 if [ "$UID" -eq 0 ]; then
     echo -e "This script should not be run as root user.\n"
@@ -82,6 +69,10 @@ function get_agent_pod_name() {
     fi
 }
 
+function get_helm_manifest_for_deployment() {
+    helm get manifest "$AGENT_DEPLOYMENT" -n "$NAMESPACE" > "$DIAG_DIR/helm_manifest.log" 2>&1
+}
+
 function log_agent_info() {
     echo -e "Collecting HD Agent environment diagnostics...\n"
 
@@ -102,7 +93,11 @@ function log_agent_info() {
         kubectl top pod "$AGENT_POD" -n "$NAMESPACE" > "$DIAG_DIR/pod_resource_usage.log" 2>&1
         kubectl get pod "$AGENT_POD" -n "$NAMESPACE" -o yaml > "$DIAG_DIR/pod_definition.log" 2>&1
         kubectl get deployment $AGENT_DEPLOYMENT -n "$NAMESPACE" -o yaml > agent_deployment.out 2>&1
-        kubectl get jobs "$AGENT_POD" -n "$NAMESPACE" -o yaml > "$DIAG_DIR/jobs.log" 2>&1
+        kubectl get pods -n "$NAMESPACE" -o wide > "$DIAG_DIR/pods.log" 2>&1
+        kubectl get jobs -n "$NAMESPACE" -o wide > "$DIAG_DIR/jobs.log" 2>&1
+
+        # attempt to get the helm manifest for the deployment
+        get_helm_manifest_for_deployment
     fi
 
     kubectl get configmaps -n "$NAMESPACE" > "$DIAG_DIR/configmap_listing.log" 2>&1
@@ -125,7 +120,7 @@ while getopts "n:h" opt; do
     case $opt in
         n) NAMESPACE="$OPTARG" ;;
         h) usage ;;
-        \?) echo "Invalid option: -$OPTARG" >&2; usage ;;
+        *) usage ;;
     esac
 done
 shift $((OPTIND-1))
@@ -150,4 +145,3 @@ cd -
 
 echo -e "done.\n"
 echo -e "Logs are available in $DIAG_DIR/hd-logs-$TIMESTAMP.tar.gz\n"
-
