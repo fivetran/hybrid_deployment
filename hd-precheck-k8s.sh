@@ -44,6 +44,13 @@ EOF
     exit 1
 }
 
+function cleanup_on_exit() {
+    kubectl delete pod "$TEST_POD_NAME" -namespace="$NAMESPACE" --ignore-not-found=true --wait=false >/dev/null 2>&1
+}
+
+# Register cleanup function to run on exit or signal
+trap 'cleanup_on_exit; exit' EXIT SIGINT SIGTERM
+
 function check_version () {
     # Pass in two arguments: version ($1) and minimum required version ($2)
     local version="$1"
