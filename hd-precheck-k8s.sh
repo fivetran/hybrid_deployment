@@ -223,7 +223,7 @@ spec:
   containers:
   - name: test-container
     image: "$HD_AGENT_IMAGE"
-    imagePullPolicy: Always
+    imagePullPolicy: IfNotPresent
     command: ["/bin/bash"]
     args: ["-c", "sleep 60"]
   restartPolicy: Never
