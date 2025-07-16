@@ -22,7 +22,7 @@ NAMESPACE="default"
 TEST_POD_NAME="hd-test-$$-pod"
 # For slower networks or clusters, you may want to increase the timeout
 TIMEOUT=60
-
+DISABLE_CONNECTIVITY_CHECKS=""
 # Key endpoints to verify connectivity
 ENDPOINTS=(
     "https://ldp.orchestrator.fivetran.com"
@@ -39,7 +39,10 @@ fi
 
 function usage() {
 cat <<EOF
-  Usage: ./hd-precheck-k8s.sh [-n namespace] [-h]
+  Usage: ./hd-precheck-k8s.sh [-n namespace] [-d] [-h]
+    -n <namespace>   Specify the Kubernetes namespace to use (default: "default")
+    -d               Disable connectivity checks to key endpoints
+    -h               Show this help message
 EOF
     exit 1
 }
@@ -174,12 +177,14 @@ function verify_pod_running() {
                 echo -e "Pod events:\n----"
                 kubectl get events --field-selector involvedObject.name="$TEST_POD_NAME" -n "$NAMESPACE" -o custom-columns=Message:.message --no-headers
                 echo -e "----\n"
-                if add_curl_to_pod; then
-                    echo "Testing connectivity to key endpoints from the pod: "
-                    verify_key_endpoints
-                    echo -e "\nConnectivity check completed.\n"
-                else
-                    echo "Failed to install curl in the test pod. Please check your Kubernetes cluster and permissions"
+                if [ -z "$DISABLE_CONNECTIVITY_CHECKS" ]; then
+                    if add_curl_to_pod; then
+                        echo "Testing connectivity to key endpoints from the pod: "
+                        verify_key_endpoints
+                        echo -e "\nConnectivity check completed.\n"
+                    else
+                        echo "Failed to install curl in the test pod. Please check your Kubernetes cluster and permissions"
+                    fi
                 fi
                 kubectl delete pod "$TEST_POD_NAME" -n "$NAMESPACE" --wait=false
                 return 0
@@ -240,11 +245,12 @@ EOF
 # Main script execution starts here
 #
 
-while getopts "n:h" opt; do
+while getopts "n:dh" opt; do
     case $opt in
         n) NAMESPACE="$OPTARG" ;;
+        d) DISABLE_CONNECTIVITY_CHECKS="Y" ;;
         h) usage ;;
-        \?) echo "Invalid option: -$OPTARG" >&2; usage ;;
+        *) usage ;;
     esac
 done
 shift $((OPTIND-1))
