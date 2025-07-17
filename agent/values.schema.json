@@ -75,6 +75,11 @@
       },
       "required": ["data_volume_pvc", "token"]
     },
+    "node_selector": {
+      "type": "object",
+      "description": "Node selector for scheduling the job pod",
+      "default": {}
+    },
     "agent": {
       "type": "object",
       "properties": {
