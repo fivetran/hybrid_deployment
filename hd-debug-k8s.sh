@@ -55,6 +55,16 @@ function check_helm() {
  fi
 }
 
+function list_kubectl_current_context(){
+    local CURRENT_CONTEXT=$(kubectl config current-context)
+    if [ -z "$CURRENT_CONTEXT" ]; then
+        echo -e "No current kubectl context set.\nPlease set a valid context pointing to your cluster.\n"
+        exit 1
+    else
+        echo -e "Current kubectl context: $CURRENT_CONTEXT\n"
+    fi
+}
+
 function get_agent_deployment_name() {
     AGENT_DEPLOYMENT=$(kubectl get deployments -n "$NAMESPACE" -l app.kubernetes.io/name=hd-agent --no-headers -o custom-columns=":metadata.name")
     if [ -z "$AGENT_DEPLOYMENT" ]; then
@@ -70,7 +80,7 @@ function get_agent_pod_name() {
 }
 
 function get_helm_manifest_for_deployment() {
-    helm get manifest "$AGENT_DEPLOYMENT" -n "$NAMESPACE" > "$DIAG_DIR/helm_manifest.log" 2>&1
+    helm get manifest "$AGENT_DEPLOYMENT" -n "$NAMESPACE" | sed -E 's/^(\s*token: ).*/\1*****/' > "$DIAG_DIR/helm_manifest.log" 2>&1
 }
 
 function log_agent_info() {
@@ -136,6 +146,7 @@ fi
 
 check_kubectl
 check_helm
+list_kubectl_current_context
 log_agent_info
 
 echo -e "done.\n"
