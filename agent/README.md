@@ -22,11 +22,11 @@ This helm chart is for deploying the Hybrid Deployment agent.
 helm upgrade --install hd-agent \
  oci://us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/helm/hybrid-deployment-agent \
  --create-namespace \
- --namespace default \
+ --namespace fivetran \
  --set config.data_volume_pvc=YOUR_PERSISTENT_VOLUME_CLAIM \
  --set config.token="YOUR_TOKEN_HERE" \
- --set config.namespace=default \
- --version 0.8.0
+ --set config.namespace=fivetran \
+ --version 0.9.0
  ```
 
 > Notes:
@@ -51,7 +51,9 @@ First create a `values.yaml` and add your required changes, then apply it using:
 helm upgrade --install hd-agent \
  oci://us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/helm/hybrid-deployment-agent \
  -f values.yaml \
- --version 0.8.0
+ --create-namespace \
+ --namespace fivetran \
+ --version 0.9.0
 ```
 
 Example values file:
