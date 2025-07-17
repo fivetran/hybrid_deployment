@@ -66,6 +66,11 @@
             },
             "additionalProperties": false
           }
+        },
+        "affinity_rules": {
+          "type": "object",
+          "description": "Map of affinity rule names to their rule definitions. At least one rule name key is required when kubernetes_affinity is non-empty.",
+          "default": {}
         }
       },
       "required": ["data_volume_pvc", "token"]
@@ -152,16 +157,6 @@
           }
         }
       }
-    },
-    "affinity_rules": {
-      "type": "object",
-      "description": "Map of affinity rule names to their rule definitions. At least one rule name key is required when kubernetes_affinity is non-empty.",
-      "additionalProperties": {
-        "type": "object",
-        "description": "Affinity rule definition",
-        "default": {}
-      },
-      "default": {}
     }
   },
   "allOf": [
@@ -180,11 +175,17 @@
         }
       },
       "then": {
-        "required": ["affinity_rules"],
         "properties": {
-          "affinity_rules": {
-            "type": "object",
-            "minProperties": 1
+          "config": {
+            "required": [
+              "affinity_rules"
+            ],
+            "properties": {
+              "affinity_rules": {
+                "type": "object",
+                "minProperties": 1
+              }
+            }
           }
         }
       }
