@@ -20,6 +20,8 @@ spec:
       labels:
         app.kubernetes.io/name: hd-agent
         {{- include "hd.labels" . | nindent 8 }}
+      annotations:
+        helm.fivetran.com/chart-version: "{{ .Chart.Version }}"
     spec:
       serviceAccountName: hd-agent-sa
       nodeSelector:
