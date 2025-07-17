@@ -20,6 +20,8 @@ spec:
       labels:
         app.kubernetes.io/name: hd-agent
         {{- include "hd.labels" . | nindent 8 }}
+      annotations:
+        helm.fivetran.com/chart-version: "{{ .Chart.Version }}"
     spec:
       serviceAccountName: hd-agent-sa
       nodeSelector:
@@ -29,10 +31,17 @@ spec:
       restartPolicy: Always
       containers:
         - name: hd-agent
-          image: {{ .Values.image }}
-          imagePullPolicy: {{ .Values.image_pull_policy }}
+          image: {{ if .Values.agent.image }}{{ .Values.agent.image }}{{ else }}{{ .Values.image }}{{ end }}
+          imagePullPolicy: {{ if .Values.agent.image_pull_policy }}{{ .Values.agent.image_pull_policy }}{{ else }}{{ .Values.image_pull_policy }}{{ end }}
           resources:
-            {{- toYaml .Values.agent.resources | nindent 12 }}
+            {{- if .Values.agent.resources }}{{ toYaml .Values.agent.resources | nindent 12 }}{{ else }}
+            requests:
+              cpu: 2
+              memory: 2Gi
+            limits:
+              cpu: 2
+              memory: 2Gi
+            {{- end }}
           ports:
             - containerPort: 8090
           livenessProbe:
@@ -64,6 +73,8 @@ spec:
               value: {{ .Release.Namespace }}
             - name: release_name
               value: {{ .Release.Name }}
+            - name: release_version
+              value: {{ .Chart.Version }}
             - name: token
               valueFrom:
                 secretKeyRef:

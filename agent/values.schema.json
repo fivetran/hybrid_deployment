@@ -83,6 +83,35 @@
     "agent": {
       "type": "object",
       "properties": {
+        "image": {
+          "type": "string",
+          "description": "The container image to use for the agent",
+          "default": "us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/ldp-agent:production"
+        },
+        "image_pull_policy": {
+          "type": "string",
+          "enum": ["Always", "IfNotPresent", "Never"],
+          "description": "Image pull policy for the container",
+          "default": "Always"
+        },
+        "labels": {
+          "type": "object",
+          "description": "Custom labels to apply to resources",
+          "default": {}
+        },
+        "node_selector": {
+          "type": "object",
+          "description": "Node selector for scheduling the agent pod",
+          "default": {}
+        },
+        "tolerations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "description": "Toleration for scheduling the agent pod"
+          },
+          "default": []
+        },
         "resources": {
           "type": "object",
           "properties": {
@@ -101,8 +130,7 @@
                   "description": "Requested memory for the agent container",
                   "default": "2Gi"
                 }
-              },
-              "required": ["cpu", "memory"]
+              }
             },
             "limits": {
               "type": "object",
@@ -111,22 +139,19 @@
                   "type": "string",
                   "pattern": "^[0-9]+(m)?$",
                   "description": "CPU limit for the agent container",
-                  "default": "4"
+                  "default": "2"
                 },
                 "memory": {
                   "type": "string",
                   "pattern": "^[0-9]+(Mi|Gi)$",
                   "description": "Memory limit for the agent container",
-                  "default": "4Gi"
+                  "default": "2Gi"
                 }
-              },
-              "required": ["cpu", "memory"]
+              }
             }
-          },
-          "required": ["requests", "limits"]
+          }
         }
-      },
-      "required": ["resources"]
+      }
     },
     "affinity_rules": {
       "type": "object",
@@ -165,7 +190,6 @@
       }
     }
   ],
-
-  "required": ["image", "image_pull_policy", "config", "agent"],
+  "required": ["config", "agent"],
   "additionalProperties": true
 }
