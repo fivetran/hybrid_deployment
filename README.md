@@ -120,35 +120,36 @@ config:
         - demo_connection4
 
 ```
-Define Node Affinity rules outside config section:
+Define Node Affinity rules inside config section:
 
-In the affinity_rules section of your Helm values.yaml file (not within config), specify node affinity rules to determine which nodes handle specific connections. Use standard Kubernetes node affinity syntax, such as labeling nodes with HD_SIZE=SMALL or HD_SIZE=LARGE to assign connections to the right nodes.
+In the affinity_rules section within the config block of your Helm values.yaml file, specify node affinity rules to determine which nodes handle specific connections. Use standard Kubernetes node affinity syntax, such as labeling nodes with HD_SIZE=SMALL or HD_SIZE=LARGE, to assign connections to the appropriate nodes.
 
 ```yaml    
-affinity_rules:
-  small:
-    affinity:
-      nodeAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 1
-            preference:
-              matchExpressions:
-                - key: HD_SIZE
-                  operator: In
-                  values:
-                    - "SMALL"
+config:
+  affinity_rules:
+    small:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: HD_SIZE
+                    operator: In
+                    values:
+                      - "SMALL"
 
-  large:
-    affinity:
-      nodeAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 1
-            preference:
-              matchExpressions:
-                - key: HD_SIZE
-                  operator: In
-                  values:
-                    - "LARGE"
+    large:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: HD_SIZE
+                    operator: In
+                    values:
+                      - "LARGE"
 ```
 More information in [documentation](https://fivetran.com/docs/deployment-models/hybrid-deployment/faq#howdoiusekubernetesnodeaffinitytorunhybriddeploymentjobsonspecificnodes)
 </details>
