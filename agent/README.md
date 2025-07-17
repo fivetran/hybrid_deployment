@@ -16,7 +16,7 @@ This helm chart is for deploying the Hybrid Deployment agent.
 
 # Usage
 
-Installation:
+**Installation**
 
 ```bash
 helm upgrade --install hd-agent \
@@ -43,6 +43,7 @@ kubectl get pods -n <your namespace>
 kubectl logs <agent-pod-name>
 ```
 
+**Install using values.yaml**
 For more complex configuration, we recommend that you use a `values.yaml` file.
 First create a `values.yaml` and add your required changes, then apply it using:
 
@@ -109,11 +110,13 @@ agent:
 > For more detail on using node_selector or affinity rules, please see [FAQ](https://fivetran.com/docs/deployment-models/hybrid-deployment/faq#howdoiusekubernetesnodeaffinitytorunhybriddeploymentjobsonspecificnodes)
 
 
-Uninstall:
+**Uninstall**
 
 ```
 helm uninstall hd-agent
 ```
+
+<br>
 
 # Agent and Job Resource Usage
 
