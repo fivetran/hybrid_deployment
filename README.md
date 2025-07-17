@@ -158,10 +158,10 @@ Installation:
 helm upgrade --install hd-agent \
  oci://us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/helm/hybrid-deployment-agent \
  --create-namespace \
- --namespace default \
+ --namespace fivetran \
  --set config.data_volume_pvc=YOUR_PERSISTENT_VOLUME_CLAIM \
  --set config.token="YOUR_TOKEN_HERE" \
- --set config.namespace=default \
+ --set config.namespace=fivetran \
  --version 0.9.0
  ```
 
