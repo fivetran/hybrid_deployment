@@ -53,7 +53,6 @@ helm upgrade --install hd-agent \
  -f values.yaml \
  --create-namespace \
  --namespace fivetran \
- --set config.namespace=fivetran \
  --version 0.9.0
 ```
 
