@@ -71,12 +71,12 @@ config:
     donkey_container_memory_request_integrations_demo_connection1: "8Gi"
     kubernetes_affinity:
         - rule: large
-            connectors:
-                - demo_connection1
+          connectors:
+          - demo_connection1
         - rule: medium
-            connectors:
-                - demo_connection2
-            default: true
+          connectors:
+          - demo_connection2
+          default: true
     affinity_rules:
         large:
             affinity:
@@ -85,8 +85,8 @@ config:
                         nodeSelectorTerms:
                             - matchExpressions:
                                 - key: hd-size
-                                operator: In
-                                values:
+                                  operator: In
+                                  values:
                                     - large
         medium:
             affinity:
@@ -95,8 +95,8 @@ config:
                         nodeSelectorTerms:
                             - matchExpressions:
                                 - key: hd-size
-                                operator: In
-                                values:
+                                  operator: In
+                                  values:
                                     - medium
 
 agent:
