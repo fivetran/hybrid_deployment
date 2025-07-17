@@ -73,6 +73,8 @@ spec:
               value: {{ .Release.Namespace }}
             - name: release_name
               value: {{ .Release.Name }}
+            - name: release_version
+              value: {{ .Chart.Version }}
             - name: token
               valueFrom:
                 secretKeyRef:
