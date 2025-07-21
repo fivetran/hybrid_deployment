@@ -93,12 +93,12 @@ spec:
                 secretKeyRef:
                   name: {{ if .Values.config.kubernetes_agent_deployment_name }}{{ .Values.config.kubernetes_agent_deployment_name }}{{ else }}{{ .Release.Name }}{{ end }}-token-secret
                   key: token
-            {{ else if .Values.config.token_secret_reference }}
+            {{ else if .Values.config.token_secret_name }}
             - name: token
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.config.token_secret_reference }}
-                  key: {{ if .Values.config.token_secret_reference_key }}{{ .Values.config.token_secret_reference_key }}{{ else }}token{{ end }}
+                  name: {{ .Values.config.token_secret_name }}
+                  key: {{ if .Values.config.token_secret_key }}{{ .Values.config.token_secret_key }}{{ else }}token{{ end }}
             {{ end }}
           envFrom:
             - configMapRef:

@@ -25,9 +25,9 @@
           "type": "string",
           "description": "Authentication token for the agent"
         },
-        "token_secret_reference": {
+        "token_secret_name": {
           "type": "string",
-          "description": "Authentication token secret to be reference for the agent"
+          "description": "Authentication token secret name to be reference for the agent"
         },
         "kubernetes_affinity": {
           "type": "array",
@@ -81,7 +81,7 @@
       "oneOf": [
         {
           "required": [
-            "token_secret_reference"
+            "token_secret_name"
           ]
         },
         {
