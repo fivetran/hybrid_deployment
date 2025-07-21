@@ -87,11 +87,19 @@ spec:
               value: {{ .Release.Name }}
             - name: release_version
               value: {{ .Chart.Version }}
+            {{ if .Values.config.token }}
             - name: token
               valueFrom:
                 secretKeyRef:
                   name: {{ if .Values.config.kubernetes_agent_deployment_name }}{{ .Values.config.kubernetes_agent_deployment_name }}{{ else }}{{ .Release.Name }}{{ end }}-token-secret
                   key: token
+            {{ else if .Values.config.token_secret_reference }}
+            - name: token
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.config.token_secret_reference }}
+                  key: {{ if .Values.config.token_secret_reference_key }}{{ .Values.config.token_secret_reference_key }}{{ else }}token{{ end }}
+            {{ end }}
           envFrom:
             - configMapRef:
                 name: hd-agent-config

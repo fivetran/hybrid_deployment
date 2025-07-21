@@ -1,7 +1,6 @@
 config:
   namespace:
   data_volume_pvc: 
-  token:
 
 agent:
   image: "us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/ldp-agent:production"
