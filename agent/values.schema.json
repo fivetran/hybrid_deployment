@@ -25,6 +25,10 @@
           "type": "string",
           "description": "Authentication token for the agent"
         },
+        "token_secret_name": {
+          "type": "string",
+          "description": "Authentication token secret name to be reference for the agent"
+        },
         "kubernetes_affinity": {
           "type": "array",
           "items": {
@@ -73,7 +77,19 @@
           "default": {}
         }
       },
-      "required": ["data_volume_pvc", "token"]
+      "required": ["data_volume_pvc"],
+      "oneOf": [
+        {
+          "required": [
+            "token_secret_name"
+          ]
+        },
+        {
+          "required": [
+            "token"
+          ]
+        }
+      ]
     },
     "labels": {
       "type": "object",
