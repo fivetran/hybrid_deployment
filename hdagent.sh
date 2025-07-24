@@ -8,7 +8,7 @@
 #  - Docker is the default runtime, if using podman use "-r podman"
 #  - If no runtime specified, detect if docker or podman available
 #
-#  For more information: 
+#  For more information:
 #     https://fivetran.com/docs/core-concepts/architecture/hybrid-deployment
 #
 #  usage: ./hdagent.sh [-r docker|podman] [-s] start|stop|status
@@ -59,10 +59,10 @@ get_token_from_config() {
 }
 
 set_environment() {
-    # Set the environment depending on docker or podman 
+    # Set the environment depending on docker or podman
 
     RUN_CMD="$1"
-    
+
     # ensure command is available and in path
     if ! command -v $RUN_CMD &> /dev/null
     then
@@ -83,7 +83,7 @@ set_environment() {
             SOCKET="/run/podman/podman.sock"
             STORAGE_DIR="/var/lib/containers"
         fi
-    else 
+    else
         # docker is used
         CONTAINER_ENV_TYPE="docker"
         INTERNAL_SOCKET="/var/run/docker.sock"
@@ -432,6 +432,13 @@ stop_agent() {
 }
 
 start_agent() {
+    # Remove existing stopped "controller" container if it exists
+    EXISTING=$($RUN_CMD ps -a -q -f name="^/?controller$" -f label=fivetran=ldp)
+    if [[ -n "$EXISTING" ]]; then
+        echo "Removing old stopped container named 'controller'"
+        $RUN_CMD rm "$EXISTING"
+    fi
+
     # create the default network if it does not exist
     set +e
     $RUN_CMD network create --driver bridge $CONTAINER_NETWORK > /dev/null 2>&1
@@ -450,7 +457,6 @@ start_agent() {
         --name controller \
         --network $CONTAINER_NETWORK \
         --env HOST_USER_HOME_DIR=$HOME \
-        --env TOKEN=$TOKEN \
         --env CONTAINER_ENV_TYPE=$CONTAINER_ENV_TYPE \
         -v $BASE_DIR/conf:/conf \
         -v $BASE_DIR/logs:/logs \
@@ -461,6 +467,28 @@ start_agent() {
     $RUN_CMD ps -f name="^/?controller" -f label=fivetran=ldp --format "table {{.ID}}\t{{.Names}}\t{{.Status}}"
 }
 
+restart_existing_agent_if_needed() {
+    # Check if a "controller" container exists (stopped or exited)
+    CONTAINER_ID=$($RUN_CMD ps -a -q -f name="^/^controller.*$" -f label=fivetran=ldp)
+
+    if [[ -n "$CONTAINER_ID" ]]; then
+        STATUS=$($RUN_CMD inspect --format '{{.State.Status}}' $CONTAINER_ID)
+        if [[ "$STATUS" == "exited" || "$STATUS" == "created" || "$STATUS" == "stopped" ]]; then
+            echo "Reusing existing stopped container: $CONTAINER_ID"
+            $RUN_CMD start $CONTAINER_ID
+            return
+        elif [[ "$STATUS" == "running" ]]; then
+            echo "Container $CONTAINER_ID is already running."
+            return
+        else
+            echo "Unexpected container status: $STATUS. Removing and recreating."
+            $RUN_CMD rm $CONTAINER_ID
+        fi
+    fi
+
+    echo "No suitable existing container found. Starting a new one."
+    start_agent
+}
 
 while getopts "r:sh" opt; do
     case "$opt" in
@@ -495,7 +523,7 @@ ACTION="$1"
 
 # If no runtime specified, try docker first then podman.
 if [[ ! -n "$RUNTIME" ]]; then
-    if command -v docker &> /dev/null; then 
+    if command -v docker &> /dev/null; then
         RUNTIME="docker"
     elif command -v podman &> /dev/null; then
         RUNTIME="podman"
@@ -520,7 +548,7 @@ fi
 case "$ACTION" in
     start)
         echo "Starting Hybrid Deployment agent using $RUNTIME"
-        start_agent
+        restart_existing_agent_if_needed
         ;;
     stop)
         echo "Stop Hybrid Deployment agent..."
