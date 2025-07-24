@@ -97,6 +97,7 @@ WantedBy=default.target
 
 ```
 systemctl --user daemon-reload
+systemctl --user enable hdagent.service 
 systemctl --user start hdagent.service
 systemctl --user status hdagent.service
 ```
