@@ -286,7 +286,7 @@ check_selinux() {
         return
     fi
 
-    if ! grep -q '"host_selinux_enabled"[[:space:]]*:[[:space:]]*(true|"true")' "$CONFIG_FILE"; then
+    if ! grep -qE '"host_selinux_enabled"[[:space:]]*:[[:space:]]*(true|"true")' "$CONFIG_FILE"; then
         WARNINGS+=("SELinux is enabled but 'host_selinux_enabled' is not set to true in $CONFIG_FILE")
     fi
 }
