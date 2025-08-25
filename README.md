@@ -219,7 +219,7 @@ helm upgrade --install hd-agent \
  --set config.data_volume_pvc=YOUR_PERSISTENT_VOLUME_CLAIM \
  --set config.token="YOUR_TOKEN_HERE" \
  --set config.namespace=fivetran \
- --version 0.11.0
+ --version 0.12.0
  ```
 
 > Notes:
