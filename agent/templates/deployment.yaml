@@ -80,7 +80,7 @@ spec:
             - name: container_env_type
               value: KUBERNETES
             - name: profile
-              value: kubernetes
+              value: {{ .Values.config.profile | default "kubernetes" }}
             - name: namespace
               value: {{ .Release.Namespace }}
             - name: release_name
