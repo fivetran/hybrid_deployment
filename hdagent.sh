@@ -453,6 +453,7 @@ start_agent() {
         --label fivetran=ldp \
         --label ldp_process_id=default-controller-process-id \
         --label ldp_controller_id=$CONTROLLER_ID \
+        --label ldp_container_type=CONTROLLER \
         --security-opt label=disable \
         --name controller \
         --network $CONTAINER_NETWORK \
