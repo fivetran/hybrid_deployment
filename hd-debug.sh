@@ -268,7 +268,7 @@ function log_disk_space () {
 function log_resources () {
     # Log the resource usage to a file
     cat /proc/cpuinfo > "$STATS_DIR/system_proc_cpuinfo.log" 2>&1
-    cat /proc/meminfo > "$STATS_DIRsystem_proc_meminfo.log" 2>&1
+    cat /proc/meminfo > "$STATS_DIR/system_proc_meminfo.log" 2>&1
     uptime > "$STATS_DIR/system_uptime.log" 2>&1
     uname -a > "$STATS_DIR/system_uname_a.log" 2>&1
 }
