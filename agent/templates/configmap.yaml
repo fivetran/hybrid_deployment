@@ -11,7 +11,7 @@ data:
   {{- if ne $key "token" }}
     {{- if eq $key "kubernetes_affinity" }}
   {{ $key }}: {{ $value | toJson | quote }}
-    {{- else if kindIs "map" $value }}
+    {{- else if or (kindIs "map" $value) (kindIs "slice" $value) }}
   {{ $key }}: {{ $value | toJson | quote }}
     {{- else }}
   {{ $key }}: {{ $value | quote }}
