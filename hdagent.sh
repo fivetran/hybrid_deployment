@@ -450,6 +450,7 @@ start_agent() {
         -d \
         --restart "on-failure:3" \
         --pull "always" \
+        --memory=2048m \
         --label fivetran=ldp \
         --label ldp_process_id=default-controller-process-id \
         --label ldp_controller_id=$CONTROLLER_ID \
