@@ -1,11 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
-metadata:
-  name: hd-agent
-  namespace: {{ .Release.Namespace }}
-  labels:
-    app.kubernetes.io/name: hd-agent
-    {{- include "hd.labels" . | nindent 4 }}
+{{- include "hd.metadata" (dict
+      "Values" .Values
+      "Release" .Release
+      "name" "hd-agent"
+      "labels" .Values.config.deployment_labels
+      "annotations" .Values.config.deployment_annotations) | nindent 0 }}
 
 spec:
   replicas: 1
@@ -20,6 +20,8 @@ spec:
       labels:
         app.kubernetes.io/name: hd-agent
         {{- include "hd.labels" . | nindent 8 }}
+      annotations:
+        {{- include "hd.annotations" (dict "Values" .Values "annotations" .Values.config.deployment_annotations) | nindent 8 }}
     spec:
       serviceAccountName: hd-agent-sa
       nodeSelector:

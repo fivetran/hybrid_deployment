@@ -2,10 +2,13 @@ image: "us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/ldp-agent:produ
 image_pull_policy: "Always"
 
 config:
-  data_volume_pvc: 
-  token:
+  data_volume_pvc: "test-pvc"
+  token: "YWN0aXZpdHlfZGVsaXJpdW06djVkWkJobm81NXpQM3dlY3J2MUd0ZFJtN0Fo"
   annotations: {}
-  service_account:  
+  service_account:
+  role_annotations: {}
+  deployment_annotations: {}
+  sa_annotations: {}
 
 labels: {}
 node_selector: {}
@@ -19,3 +22,6 @@ agent:
     limits:
       cpu: "4000m"
       memory: "4Gi"
+
+
+# helm upgrade --install hd-agent oci://us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/helm/hybrid-deployment-agent --create-namespace --namespace default --set config.data_volume_pvc=VOL_CLAIM_HERE --set config.token="YWN0aXZpdHlfZGVsaXJpdW06djVkWkJobm81NXpQM3dlY3J2MUd0ZFJtN0Fo" --set config.namespace=default --version 0.14.0
