@@ -10,6 +10,7 @@ config:
   deployment_annotations: {}
   sa_annotations: {}
 
+
 labels: {}
 node_selector: {}
 tolerations: []
