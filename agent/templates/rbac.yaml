@@ -1,17 +1,22 @@
+---
 apiVersion: v1
 kind: ServiceAccount
-{{- include "hd.metadata" (dict 
-      "Values" .Values 
-      "Release" .Release 
-      "name" "hd-job-sa") | nindent 0 }}
+metadata:
+  name: hd-job-sa
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "hd.labels" (dict "Values" .Values "name" "hd-job-sa") | nindent 4 }}
+  annotations:
+    {{- include "hd.annotations" (dict "Values" .Values "annotations" .Values.config.sa_annotations) | nindent 4 }}
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
-{{- include "hd.metadata" (dict 
-      "Values" .Values 
-      "Release" .Release 
-      "name" "hd-job-role") | nindent 0 }}
+metadata:
+  name: hd-job-role
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "hd.labels" (dict "Values" .Values "name" "hd-job-role") | nindent 4 }}
 rules:
   - apiGroups: [""]
     resources: ["persistentvolumeclaims"]
@@ -20,10 +25,11 @@ rules:
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
-{{- include "hd.metadata" (dict 
-      "Values" .Values 
-      "Release" .Release 
-      "name" "hd-job-rolebinding") | nindent 0 }}
+metadata:
+  name: hd-job-rolebinding
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "hd.labels" (dict "Values" .Values "name" "hd-job-rolebinding") | nindent 4 }}
 subjects:
   - kind: ServiceAccount
     name: hd-job-sa
@@ -36,19 +42,22 @@ roleRef:
 ---
 apiVersion: v1
 kind: ServiceAccount
-{{- include "hd.metadata" (dict 
-      "Values" .Values 
-      "Release" .Release 
-      "name" "hd-agent-sa" 
-      "annotations" .Values.config.sa_annotations) | nindent 0 }}
+metadata:
+  name: hd-agent-sa
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "hd.labels" (dict "Values" .Values "name" "hd-agent-sa") | nindent 4 }}
+  annotations:
+    {{- include "hd.annotations" (dict "Values" .Values "annotations" .Values.config.sa_annotations) | nindent 4 }}
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
-{{- include "hd.metadata" (dict 
-      "Values" .Values 
-      "Release" .Release 
-      "name" "hd-agent-role") | nindent 0 }}
+metadata:
+  name: hd-agent-role
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "hd.labels" (dict "Values" .Values "name" "hd-agent-role") | nindent 4 }}
 rules:
   - apiGroups: ["apps"]
     resources: ["deployments"]
@@ -75,10 +84,11 @@ rules:
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
-{{- include "hd.metadata" (dict 
-      "Values" .Values 
-      "Release" .Release 
-      "name" "hd-agent-rolebinding") | nindent 0 }}
+metadata:
+  name: hd-agent-rolebinding
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "hd.labels" (dict "Values" .Values "name" "hd-agent-rolebinding") | nindent 4 }}
 subjects:
   - kind: ServiceAccount
     name: hd-agent-sa
@@ -91,21 +101,24 @@ roleRef:
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
-{{- include "hd.metadata" (dict 
-      "Values" .Values 
-      "Release" .Release 
-      "name" "hd-agent-event-reader") | nindent 0 }}
+metadata:
+  name: hd-agent-event-reader
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "hd.labels" (dict "Values" .Values "name" "hd-agent-event-reader") | nindent 4 }}
 rules:
   - apiGroups: [""]
     resources: ["events"]
     verbs: ["get", "list", "watch"]
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
-{{- include "hd.metadata" (dict 
-      "Values" .Values 
-      "Release" .Release 
-      "name" "hd-agent-event-reader-binding") | nindent 0 }}
+metadata:
+  name: hd-agent-event-reader-binding
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "hd.labels" (dict "Values" .Values "name" "hd-agent-event-reader-binding") | nindent 4 }}
 subjects:
   - kind: ServiceAccount
     name: hd-agent-sa
@@ -114,4 +127,3 @@ roleRef:
   kind: Role
   name: hd-agent-event-reader
   apiGroup: rbac.authorization.k8s.io
-
