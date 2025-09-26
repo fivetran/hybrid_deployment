@@ -1,13 +1,12 @@
-{{- define "hd.required.labels" -}}
-app.kubernetes.io/app: {{ if .Release }}{{ .Release.Name }}{{ else }}default-app{{ end }}
-app.kubernetes.io/part-of: hybrid-deployment
-{{- end }}
-
 {{- define "hd.labels" -}}
-{{- $vals := .Values }}
-{{- $defaultLabels := fromYaml (include "hd.required.labels" .) }}
+{{- $required := dict "app.kubernetes.io/part-of" "hybrid-deployment" }}
+{{- if .Release }}
+  {{- $required = mergeOverwrite $required (dict "app.kubernetes.io/app" .Release.Name) }}
+{{- else }}
+  {{- $required = mergeOverwrite $required (dict "app.kubernetes.io/app" "default-app") }}
+{{- end }}
 {{- $extra := .labels | default dict }}
-{{- $merged := mergeOverwrite (deepCopy $defaultLabels) (deepCopy $extra) }}
+{{- $merged := mergeOverwrite (deepCopy $required) (deepCopy $extra) }}
 {{- if .name }}
   {{- $merged = mergeOverwrite $merged (dict "app.kubernetes.io/name" .name) }}
 {{- end }}
