@@ -1,23 +1,17 @@
 apiVersion: v1
 kind: ServiceAccount
-metadata:
-  # Used by Hybrid Deployment Jobs
-  name: hd-job-sa
-  namespace: {{ .Release.Namespace }}
-  labels:
-    app.kubernetes.io/name: hd-job-sa
-    {{- include "hd.labels" . | nindent 4 }}
+{{- include "hd.metadata" (dict 
+      "Values" .Values 
+      "Release" .Release 
+      "name" "hd-job-sa") | nindent 0 }}
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
-metadata:
-  # Role that will be used by HD jobs
-  namespace: {{ .Release.Namespace }}
-  name: hd-job-role
-  labels:
-    app.kubernetes.io/name: hd-job-role
-    {{- include "hd.labels" . | nindent 4 }}
+{{- include "hd.metadata" (dict 
+      "Values" .Values 
+      "Release" .Release 
+      "name" "hd-job-role") | nindent 0 }}
 rules:
   - apiGroups: [""]
     resources: ["persistentvolumeclaims"]
@@ -26,12 +20,10 @@ rules:
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
-metadata:
-  name: hd-job-rolebinding
-  namespace: {{ .Release.Namespace }}
-  labels:
-    app.kubernetes.io/name: hd-job-rolebinding
-    {{- include "hd.labels" . | nindent 4 }}
+{{- include "hd.metadata" (dict 
+      "Values" .Values 
+      "Release" .Release 
+      "name" "hd-job-rolebinding") | nindent 0 }}
 subjects:
   - kind: ServiceAccount
     name: hd-job-sa
@@ -44,24 +36,19 @@ roleRef:
 ---
 apiVersion: v1
 kind: ServiceAccount
-metadata:
-  # Used by Hybrid Deployment Agent
-  name: hd-agent-sa
-  namespace: {{ .Release.Namespace }}
-  labels:
-    app.kubernetes.io/name: hd-agent-sa
-    {{- include "hd.labels" . | nindent 4 }}
+{{- include "hd.metadata" (dict 
+      "Values" .Values 
+      "Release" .Release 
+      "name" "hd-agent-sa" 
+      "annotations" .Values.config.sa_annotations) | nindent 0 }}
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
-metadata:
-  # Role used by HD Agent
-  namespace: {{ .Release.Namespace }}
-  name: hd-agent-role
-  labels:
-    app.kubernetes.io/name: hd-agent-role
-    {{- include "hd.labels" . | nindent 4 }}
+{{- include "hd.metadata" (dict 
+      "Values" .Values 
+      "Release" .Release 
+      "name" "hd-agent-role") | nindent 0 }}
 rules:
   - apiGroups: ["apps"]
     resources: ["deployments"]
@@ -88,12 +75,10 @@ rules:
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
-metadata:
-  name: hd-agent-rolebinding
-  namespace: {{ .Release.Namespace }}
-  labels:
-    app.kubernetes.io/name: hd-agent-rolebinding
-    {{- include "hd.labels" . | nindent 4 }}
+{{- include "hd.metadata" (dict 
+      "Values" .Values 
+      "Release" .Release 
+      "name" "hd-agent-rolebinding") | nindent 0 }}
 subjects:
   - kind: ServiceAccount
     name: hd-agent-sa
@@ -106,12 +91,10 @@ roleRef:
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
-metadata:
-  namespace: {{ .Release.Namespace }}
-  name: hd-agent-event-reader
-  labels:
-    app.kubernetes.io/name: hd-agent-event-reader
-    {{- include "hd.labels" . | nindent 4 }}
+{{- include "hd.metadata" (dict 
+      "Values" .Values 
+      "Release" .Release 
+      "name" "hd-agent-event-reader") | nindent 0 }}
 rules:
   - apiGroups: [""]
     resources: ["events"]
@@ -119,12 +102,10 @@ rules:
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
-metadata:
-  name: hd-agent-event-reader-binding
-  namespace: {{ .Release.Namespace }}
-  labels:
-    app.kubernetes.io/name: hd-agent-event-reader-binding
-    {{- include "hd.labels" . | nindent 4 }}
+{{- include "hd.metadata" (dict 
+      "Values" .Values 
+      "Release" .Release 
+      "name" "hd-agent-event-reader-binding") | nindent 0 }}
 subjects:
   - kind: ServiceAccount
     name: hd-agent-sa
