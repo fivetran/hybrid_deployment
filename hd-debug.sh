@@ -317,6 +317,15 @@ function log_apparmor() {
     fi
 }
 
+function log_check_rootless_linger() {
+    # Check if rootless linger is enabled for the user
+    if command -v loginctl &> /dev/null; then
+        loginctl show-user $USER > "$STATS_DIR/system_loginctl_show_user.log" 2>&1
+        loginctl user-status $USER > "$STATS_DIR/system_loginctl_user_status.log" 2>&1
+    else
+        echo "loginctl is not installed/used or not in the PATH." > "$STATS_DIR/system_loginctl_status.log"
+    fi
+}
 
 function log_base_acl() {
     # Log the base ACL
@@ -451,6 +460,7 @@ log_os_version
 log_base_acl
 log_user
 get_user_systemd_configuration
+log_check_rootless_linger
 test_api_fivetran_com
 test_orchestrator_com
 
