@@ -305,6 +305,28 @@ check_docker_rootless_compatibility() {
     fi
 }
 
+check_rootless_linger() {
+    # Check if we're using a rootless configuration (not docker rootful or podman rootful)
+    if [ "$SOCKET" == "/var/run/docker.sock" ] || [ "$SOCKET" == "/run/podman/podman.sock" ]; then
+        # Using rootful configuration, skip linger check
+        return
+    fi
+
+    # Check if loginctl is available
+    if ! command -v loginctl &> /dev/null; then
+        # loginctl not available, can't check linger status
+        return
+    fi
+
+    # Check if linger is enabled for the current user
+    local linger_status
+    linger_status=$(loginctl show-user "$USER" 2>/dev/null | grep -E "^Linger=" | cut -d= -f2)
+
+    if [ "$linger_status" != "yes" ]; then
+        WARNINGS+=("Rootless configuration detected but user linger is not enabled. Run 'sudo loginctl enable-linger $USER' to ensure containers stay running after user exit")
+    fi
+}
+
 check_config() {
     if [ ! -f "$CONFIG_FILE" ]; then
         WARNINGS+=("Configuration file $CONFIG_FILE not found")
@@ -378,6 +400,7 @@ validate_prerequisites() {
     check_data_storage_space
     check_selinux
     check_docker_rootless_compatibility
+    check_rootless_linger
     check_config
     check_service_reachability
 
