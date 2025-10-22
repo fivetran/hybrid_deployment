@@ -88,6 +88,10 @@ spec:
               value: {{ .Release.Name }}
             - name: release_version
               value: {{ .Chart.Version }}
+            {{ if .Values.config.external_secret_name }}
+            - name: external_secret_name
+              value: {{ .Values.config.external_secret_name }}
+            {{ end }}
             {{ if .Values.config.token }}
             - name: token
               valueFrom:
