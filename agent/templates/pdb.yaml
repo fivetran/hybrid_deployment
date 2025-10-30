@@ -8,4 +8,3 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: hd-agent
-      app.kubernetes.io/part-of: hybrid-deployment
