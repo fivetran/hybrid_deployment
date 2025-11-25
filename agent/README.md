@@ -13,6 +13,23 @@ This helm chart is for deploying the Hybrid Deployment agent.
 * NFS based volume recommended (required accessModes as ReadWriteMany)
 * The persistent volume capacity should be larger than your dataset
 * Cluster should have network access to both source and destination
+* If your Kubernetes cluster uses a node autoscaler - such as Karpenter; it is recommended to use Helm chart version 0.17.0 or later. In this setup, you may also need to add the following annotation:
+
+    ```yaml
+    config:
+        namespace: fivetran
+        data_volume_pvc: PVC_NAME_HERE
+        token: "TOKEN_HERE"
+        annotations:
+            karpenter.sh/do-not-disrupt: "true"
+
+    agent:
+        image: "us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/ldp-agent:production"
+        image_pull_policy: "Always"
+        annotations:
+            karpenter.sh/do-not-disrupt: "true"
+    ```
+
 
 # Usage
 
@@ -26,7 +43,7 @@ helm upgrade --install hd-agent \
  --set config.data_volume_pvc=YOUR_PERSISTENT_VOLUME_CLAIM \
  --set config.token="YOUR_TOKEN_HERE" \
  --set config.namespace=fivetran \
- --version 0.16.0
+ --version 0.17.0
  ```
 
 > Notes:
@@ -53,7 +70,7 @@ helm upgrade --install hd-agent \
  -f values.yaml \
  --create-namespace \
  --namespace fivetran \
- --version 0.16.0
+ --version 0.17.0
 ```
 
 Example values file:
