@@ -22,7 +22,7 @@ spec:
         {{- include "hd.labels" . | nindent 8 }}
       annotations:
         helm.fivetran.com/chart-version: "{{ .Chart.Version }}"
-        {{- include "hd.annotations" (dict "Values" .Values "annotations" .Values.agent.annotations) | nindent 8 }}
+        {{- include "hd.annotations" (dict "Values" .Values "annotations" (or .Values.agent.annotations .Values.config.deployment_annotations)) | nindent 8 }}
     spec:
       serviceAccountName: hd-agent-sa
       {{- if or .Values.agent.node_selector .Values.node_selector }}
