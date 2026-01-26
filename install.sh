@@ -109,8 +109,7 @@ else
 {
   "token": "$TOKEN",
   "host_selinux_enabled": "$SELINUX_STATUS",
-  "enable_kerberos_auth": false,
-  "kerberos_principal": "username@REALM.COM"
+  "enable_kerberos_auth": false
 }
 EOF
 fi
