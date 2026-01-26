@@ -31,6 +31,8 @@ CONFIG_FILE=conf/config.json
 AGENT_IMAGE="us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/ldp-agent:production"
 SCRIPT_URL="https://raw.githubusercontent.com/fivetran/hybrid_deployment/main/hdagent.sh"
 CONTAINER_NETWORK="fivetran_ldp"
+KERBEROS_KEYTAB_PATH=${KERBEROS_KEYTAB_PATH:-"$BASE_DIR/conf/krb5.keytab"}
+KERBEROS_KRB5_CONF_PATH=${KERBEROS_KRB5_CONF_PATH:-"$BASE_DIR/conf/krb5.conf"}
 TOKEN=""
 CONTROLLER_ID=""
 SOCKET=""
@@ -467,6 +469,49 @@ start_agent() {
     $RUN_CMD network create --driver bridge $CONTAINER_NETWORK > /dev/null 2>&1
     set -e
 
+    # Handle Kerberos authentication if enabled
+    local kerberos_env_args=()
+
+    if [[ "${ENABLE_KERBEROS_AUTH}" == "true" ]]; then
+        echo "Kerberos authentication enabled, processing Kerberos files..."
+
+        # Check if files exist and are readable
+        if [[ ! -f "${KERBEROS_KEYTAB_PATH}" ]]; then
+            echo "Error: Kerberos keytab file not found or not a regular file at: ${KERBEROS_KEYTAB_PATH}"
+            exit 1
+        fi
+        if [[ ! -r "${KERBEROS_KEYTAB_PATH}" ]]; then
+            echo "Error: Kerberos keytab file is not readable at: ${KERBEROS_KEYTAB_PATH}"
+            exit 1
+        fi
+        if [[ ! -f "${KERBEROS_KRB5_CONF_PATH}" ]]; then
+            echo "Error: Kerberos krb5.conf file not found or not a regular file at: ${KERBEROS_KRB5_CONF_PATH}"
+            exit 1
+        fi
+        if [[ ! -r "${KERBEROS_KRB5_CONF_PATH}" ]]; then
+            echo "Error: Kerberos krb5.conf file is not readable at: ${KERBEROS_KRB5_CONF_PATH}"
+            exit 1
+        fi
+
+        # Validate Kerberos principal is provided
+        if [[ -z "${KERBEROS_PRINCIPAL}" ]]; then
+            echo "Error: KERBEROS_PRINCIPAL environment variable is required when Kerberos authentication is enabled"
+            exit 1
+        fi
+
+        # Base64 encode the files
+        local kerberos_keytab_env=$(base64 < "${KERBEROS_KEYTAB_PATH}" | tr -d '\n')
+        local kerberos_krb5_conf_env=$(base64 < "${KERBEROS_KRB5_CONF_PATH}" | tr -d '\n')
+
+        kerberos_env_args+=(--env "enable_kerberos_auth=true")
+        kerberos_env_args+=(--env "kerberos_keytab=${kerberos_keytab_env}")
+        kerberos_env_args+=(--env "kerberos_krb5_conf=${kerberos_krb5_conf_env}")
+        kerberos_env_args+=(--env "kerberos_principal=${KERBEROS_PRINCIPAL}")
+
+        echo "Kerberos principal configured successfully"
+        echo "Kerberos files processed successfully"
+    fi
+
     # create and run the agent container in background
 
     $RUN_CMD run \
@@ -483,6 +528,7 @@ start_agent() {
         --network $CONTAINER_NETWORK \
         --env HOST_USER_HOME_DIR=$HOME \
         --env CONTAINER_ENV_TYPE=$CONTAINER_ENV_TYPE \
+        "${kerberos_env_args[@]}" \
         -v $BASE_DIR/conf:/conf \
         -v $BASE_DIR/logs:/logs \
         -v $SOCKET:$INTERNAL_SOCKET \
