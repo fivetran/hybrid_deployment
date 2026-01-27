@@ -108,8 +108,7 @@ else
     cat > "$CONFIG_FILE" <<EOF
 {
   "token": "$TOKEN",
-  "host_selinux_enabled": "$SELINUX_STATUS",
-  "enable_kerberos_auth": false
+  "host_selinux_enabled": "$SELINUX_STATUS"
 }
 EOF
 fi
