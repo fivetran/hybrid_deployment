@@ -525,6 +525,7 @@ start_agent() {
 
     setup_kerberos_auth_if_enabled
 
+    # create and run the agent container in background
     $RUN_CMD run \
         -d \
         --restart "on-failure:3" \
