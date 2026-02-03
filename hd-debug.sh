@@ -349,6 +349,18 @@ function log_config () {
     fi
 }
 
+function log_hdagent_logs () {
+    # Log the hdagent startup/shutdown logs
+    if [ -d "$BASE_DIR/hdagent_lifecycle_logs" ]; then
+        ls -altr $BASE_DIR/hdagent_lifecycle_logs > "$STATS_DIR/base_dir_hdagent_lifecycle_logs.log" 2>&1
+        if [ -f "$BASE_DIR/hdagent_lifecycle_logs/hdagent_lifecycle.log" ]; then
+            cp "$BASE_DIR/hdagent_lifecycle_logs/hdagent_lifecycle.log" "$STATS_DIR/hdagent_lifecycle.log" 2>&1
+        fi
+    else
+        echo "Directory NOT found at $BASE_DIR/hdagent_lifecycle_logs"
+    fi
+}
+
 function test_api_fivetran_com () {
     # expected: {"code":"AuthFailed","message":"Missing authorization header"} as we did not pass in token,
     # this is purely to see if we can get to the API 
@@ -443,6 +455,7 @@ log_container_info
 log_disk_space
 log_base_dir_info
 log_config
+log_hdagent_logs
 log_resources
 log_network_stats
 get_conntrack_values

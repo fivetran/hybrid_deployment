@@ -31,6 +31,7 @@ CONFIG_FILE=conf/config.json
 AGENT_IMAGE="us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/ldp-agent:production"
 SCRIPT_URL="https://raw.githubusercontent.com/fivetran/hybrid_deployment/main/hdagent.sh"
 CONTAINER_NETWORK="fivetran_ldp"
+LOGDIR="$BASE_DIR/hdagent_lifecycle_logs"
 TOKEN=""
 CONTROLLER_ID=""
 SOCKET=""
@@ -51,6 +52,11 @@ usage() {
     exit 1
 }
 
+log_hdagent_out() {
+    echo "$1"
+    # Append message with timestamp (UTC) to log file
+    echo "$(date -u +'%Y-%m-%d %H:%M:%S') UTC - $1" >> "$LOGDIR/hdagent_lifecycle.log"
+}
 
 get_token_from_config() {
     if [[ -f "$CONFIG_FILE" ]]; then
@@ -561,6 +567,9 @@ fi
 
 set_environment $RUNTIME
 
+# Create log directory once at startup
+mkdir -p "$LOGDIR"
+
 # Run checks only when starting the agent and not skipped
 if [[ "$ACTION" == "start" && "$SKIP_CHECKS" != "true" ]]; then
     validate_script_hash
@@ -572,11 +581,11 @@ fi
 # Validate the action
 case "$ACTION" in
     start)
-        echo "Starting Hybrid Deployment agent using $RUNTIME"
+        log_hdagent_out "Starting Hybrid Deployment agent using $RUNTIME"
         restart_existing_agent_if_needed
         ;;
     stop)
-        echo "Stop Hybrid Deployment agent..."
+        log_hdagent_out "Stop Hybrid Deployment agent..."
         stop_agent
         ;;
     status)
