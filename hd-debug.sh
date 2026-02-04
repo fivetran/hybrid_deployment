@@ -58,6 +58,7 @@ mkdir -p $STATS_DIR 2>/dev/null
 echo -e "Stats location: $STATS_DIR\n"
 
 CONFIG_FILE=$BASE_DIR/conf/config.json
+LOGDIR=$BASE_DIR/logs
 TOKEN=""
 CONTROLLER_ID="unknown_controller_id"
 SOCKET=""
@@ -351,13 +352,10 @@ function log_config () {
 
 function log_hdagent_logs () {
     # Log the hdagent startup/shutdown logs
-    if [ -d "$BASE_DIR/hdagent_lifecycle_logs" ]; then
-        ls -altr $BASE_DIR/hdagent_lifecycle_logs > "$STATS_DIR/base_dir_hdagent_lifecycle_logs.log" 2>&1
-        if [ -f "$BASE_DIR/hdagent_lifecycle_logs/hdagent_lifecycle.log" ]; then
-            cp "$BASE_DIR/hdagent_lifecycle_logs/hdagent_lifecycle.log" "$STATS_DIR/hdagent_lifecycle.log" 2>&1
-        fi
+    if [ -f "$LOGDIR/hdagent.log" ]; then
+        cp "$LOGDIR/hdagent.log" "$STATS_DIR/hdagent.log" 2>&1
     else
-        echo "Directory NOT found at $BASE_DIR/hdagent_lifecycle_logs"
+        echo "hdagent.log NOT found at $LOGDIR/hdagent.log"
     fi
 }
 
