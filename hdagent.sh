@@ -503,6 +503,29 @@ status_agent() {
     fi
 }
 
+function get_container_id() {
+    local container_prefix=$1
+    container_id=$(docker ps -a -q -f name="^/${container_prefix}")
+    if [[ -z "$container_id" ]]; then
+        echo "NOT_FOUND"
+    else
+        echo "${container_id}"
+    fi
+}
+
+stop_workers() {
+    for container_prefix in "hd-base-activity-worker" "hd-workflow-worker"; do
+        CONTAINER_ID=$(get_container_id "$container_prefix")
+        if [[ "$CONTAINER_ID" == "NOT_FOUND" ]]; then
+           echo "Container '$container_prefix' does not exist"
+        else
+           echo "Stopping container '$container_prefix' (ID: $CONTAINER_ID)"
+	   docker stop $CONTAINER_ID > /dev/null 2>&1
+	   docker rm $CONTAINER_ID > /dev/null 2>&1
+        fi
+    done
+}
+
 stop_agent() {
     # agent container name will start with controller and label fivetran=ldp is set.
     CONTAINER_ID=$($RUN_CMD ps -a -q -f name="^/?controller" -f label=fivetran=ldp)
@@ -642,6 +665,7 @@ case "$ACTION" in
     stop)
         log_hdagent_out "Stop Hybrid Deployment agent..."
         stop_agent
+	stop_workers
         ;;
     status)
         echo "Agent status check..."
