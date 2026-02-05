@@ -364,7 +364,7 @@ check_config() {
     fi
 }
 
-function check_service_reachability() {
+check_service_reachability() {
     # Check if we can reach Fivetran endpoints without authentication
     # This is purely to see if we can get to the endpoints, expected response is an error
 
@@ -503,7 +503,7 @@ status_agent() {
     fi
 }
 
-function get_container_id() {
+get_container_id() {
     local container_prefix=$1
     container_id=$(docker ps -a -q -f name="^/${container_prefix}")
     if [[ -z "$container_id" ]]; then
