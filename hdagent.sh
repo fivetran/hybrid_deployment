@@ -31,6 +31,7 @@ CONFIG_FILE=conf/config.json
 AGENT_IMAGE="us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/ldp-agent:production"
 SCRIPT_URL="https://raw.githubusercontent.com/fivetran/hybrid_deployment/main/hdagent.sh"
 CONTAINER_NETWORK="fivetran_ldp"
+LOGDIR=$BASE_DIR/logs
 KERBEROS_KEYTAB_PATH=${KERBEROS_KEYTAB_PATH:-"$BASE_DIR/conf/krb5.keytab"}
 KERBEROS_KRB5_CONF_PATH=${KERBEROS_KRB5_CONF_PATH:-"$BASE_DIR/conf/krb5.conf"}
 KERBEROS_ENV_ARGS=()
@@ -54,6 +55,11 @@ usage() {
     exit 1
 }
 
+log_hdagent_out() {
+    echo "$1"
+    # Append message with timestamp (UTC) to log file
+    echo "$(date -u +'%Y-%m-%d %H:%M:%S') UTC - $1" >> "$LOGDIR/hdagent.log"
+}
 
 get_token_from_config() {
     if [[ -f "$CONFIG_FILE" ]]; then
@@ -230,7 +236,7 @@ check_container_storage_space() {
 validate_config_dir() {
     local key="$1"
     local dir_value=$(grep -o "\"$key\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" "$CONFIG_FILE" | awk -F'"' '{print $4}')
-    
+
     if [ -z "$dir_value" ]; then
         WARNINGS+=("$key is configured but value is empty in $CONFIG_FILE")
         return 1
@@ -238,7 +244,7 @@ validate_config_dir() {
         WARNINGS+=("$key is configured but directory does not exist: $dir_value")
         return 1
     fi
-    
+
     echo "$dir_value"
     return 0
 }
@@ -630,11 +636,11 @@ fi
 # Validate the action
 case "$ACTION" in
     start)
-        echo "Starting Hybrid Deployment agent using $RUNTIME"
+        log_hdagent_out "Starting Hybrid Deployment agent using $RUNTIME"
         restart_existing_agent_if_needed
         ;;
     stop)
-        echo "Stop Hybrid Deployment agent..."
+        log_hdagent_out "Stop Hybrid Deployment agent..."
         stop_agent
         ;;
     status)

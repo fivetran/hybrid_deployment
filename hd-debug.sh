@@ -58,6 +58,7 @@ mkdir -p $STATS_DIR 2>/dev/null
 echo -e "Stats location: $STATS_DIR\n"
 
 CONFIG_FILE=$BASE_DIR/conf/config.json
+LOGDIR=$BASE_DIR/logs
 TOKEN=""
 CONTROLLER_ID="unknown_controller_id"
 SOCKET=""
@@ -349,6 +350,15 @@ function log_config () {
     fi
 }
 
+function log_hdagent_logs () {
+    # Log the hdagent startup/shutdown logs
+    if [ -f "$LOGDIR/hdagent.log" ]; then
+        cp "$LOGDIR/hdagent.log" "$STATS_DIR/hdagent.log" 2>&1
+    else
+        echo "hdagent.log NOT found at $LOGDIR/hdagent.log"
+    fi
+}
+
 function test_api_fivetran_com () {
     # expected: {"code":"AuthFailed","message":"Missing authorization header"} as we did not pass in token,
     # this is purely to see if we can get to the API 
@@ -443,6 +453,7 @@ log_container_info
 log_disk_space
 log_base_dir_info
 log_config
+log_hdagent_logs
 log_resources
 log_network_stats
 get_conntrack_values
