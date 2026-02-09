@@ -25,6 +25,7 @@ DIAG_DIR="$BASE_DIR/k8s_stats"
 TIMESTAMP=$(date +%Y-%m-%d_%H-%M)
 AGENT_DEPLOYMENT=""
 AGENT_POD=""
+CONTROLLER_ID=""
 
 rm -r "$DIAG_DIR" 2>/dev/null
 mkdir -p "$DIAG_DIR" 2>/dev/null
@@ -53,6 +54,17 @@ function check_helm() {
     echo -e "https://helm.sh/docs/intro/install/\n"
     exit 1
  fi
+}
+
+function get_controller_id () {
+    CONTROLLER_ID=$(kubectl get secret hd-agent-secret -n $NAMESPACE -o jsonpath='{.data.controller_id}' 2>/dev/null | base64 -d 2>/dev/null)
+
+    if [ ! -z "$CONTROLLER_ID" ]; then
+        echo "Controller ID: $CONTROLLER_ID"
+    else
+        echo "Warning: Could not extract controller_id from secret"
+        CONTROLLER_ID="unknown"
+    fi
 }
 
 function list_kubectl_current_context(){
@@ -100,13 +112,13 @@ function log_agent_info() {
     
         kubectl describe pod "$AGENT_POD" -n "$NAMESPACE" > "$DIAG_DIR/pod_description.log" 2>&1
         # Get events for all objects related to the agent deployment (including terminated pods) with timestamp and node info
-        kubectl get events -n "$NAMESPACE" -o custom-columns=Timestamp:.lastTimestamp,Node:.source.host,Name:.involvedObject.name,Message:.message --no-headers | grep "$AGENT_DEPLOYMENT" > "$DIAG_DIR/pod_events.log" 2>&1
+        kubectl get events -n "$NAMESPACE" -o custom-columns=Timestamp:.lastTimestamp,Node:.source.host,Name:.involvedObject.name,Message:.message --no-headers | egrep "donkey|worker|hd-agent|setup|standard" > "$DIAG_DIR/pod_events.log" 2>&1
         kubectl top pod "$AGENT_POD" -n "$NAMESPACE" > "$DIAG_DIR/pod_resource_usage.log" 2>&1
         kubectl get pod "$AGENT_POD" -n "$NAMESPACE" -o yaml > "$DIAG_DIR/pod_definition.log" 2>&1
         kubectl get deployment $AGENT_DEPLOYMENT -n "$NAMESPACE" -o yaml > "$DIAG_DIR/agent_deployment.log" 2>&1
         kubectl get pods -n "$NAMESPACE" -o wide > "$DIAG_DIR/pods.log" 2>&1
         kubectl get jobs -n "$NAMESPACE" -o wide > "$DIAG_DIR/jobs.log" 2>&1
-	kubectl logs "$AGENT_POD" -n "$NAMESPACE" > "$DIAG_DIR/agent.log" 2>&1
+	    kubectl logs "$AGENT_POD" -n "$NAMESPACE" > "$DIAG_DIR/agent.log" 2>&1
 
         # attempt to get the helm manifest for the deployment
         get_helm_manifest_for_deployment
@@ -122,6 +134,10 @@ function log_agent_info() {
     local HD_AGENT_NODE_NAME=$(kubectl get pod "$AGENT_POD" -n "$NAMESPACE" -o jsonpath="{.spec.nodeName}")
     kubectl describe node "$HD_AGENT_NODE_NAME" > "$DIAG_DIR/node_description.log" 2>&1
     kubectl get nodes -o custom-columns=Name:.metadata.name,Created:.metadata.creationTimestamp,nCPU:.status.capacity.cpu,Memory:.status.capacity.memory  > "$DIAG_DIR/node_listing.log" 2>&1
+    kubectl get nodes -o wide > "$DIAG_DIR/nodes_wide.log" 2>&1
+    kubectl get nodes --show-labels > "$DIAG_DIR/nodes_labels.log" 2>&1
+    # list nodepools if configured.
+    kubectl get nodepools -o wide > "$DIAG_DIR/nodepools.log" 2>&1
 
     kubectl get serviceaccounts -n "$NAMESPACE" > "$DIAG_DIR/service_accounts.log" 2>&1
     kubectl get roles -n "$NAMESPACE" > "$DIAG_DIR/roles.log" 2>&1
@@ -153,12 +169,12 @@ list_kubectl_current_context
 log_agent_info
 
 echo -e "done.\n"
-echo -e "Packing logs into hd-logs-$TIMESTAMP.tar.gz\n"
+echo -e "Packing logs into hd-$CONTROLLER_ID-$TIMESTAMP.tar.gz\n"
 
 cd $DIAG_DIR 
-tar czf hd-logs-$TIMESTAMP.tar.gz ./*.log
-ls -altr hd-logs-$TIMESTAMP.tar.gz
+tar czf hd-$CONTROLLER_ID-$TIMESTAMP.tar.gz ./*.log
+ls -altr hd-$CONTROLLER_ID-$TIMESTAMP.tar.gz
 cd - 
 
 echo -e "done.\n"
-echo -e "Logs are available in $DIAG_DIR/hd-logs-$TIMESTAMP.tar.gz\n"
+echo -e "Logs are available in $DIAG_DIR/hd-$CONTROLLER_ID-$TIMESTAMP.tar.gz\n"
