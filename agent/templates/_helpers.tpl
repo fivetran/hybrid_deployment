@@ -20,6 +20,10 @@
 {{- end }}
 {{- end }}
 
+{{- define "hd.selectorLabels" -}}
+{{- toYaml (dict "app.kubernetes.io/part-of" "hybrid-deployment" "app.kubernetes.io/app" .Release.Name) }}
+{{- end }}
+
 {{- define "hd.annotations" -}}
 {{- $extra := .annotations | default dict }}
 {{- if gt (len $extra) 0 }}
