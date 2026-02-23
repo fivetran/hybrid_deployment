@@ -93,8 +93,23 @@
     },
     "labels": {
       "type": "object",
-      "description": "Custom labels to apply to resources",
+      "description": "Optional custom labels applied to resource metadata. Values must be strings.",
+      "additionalProperties": {
+        "type": "string"
+      },
       "default": {}
+    },
+    "pdb": {
+      "type": "object",
+      "description": "Optional PodDisruptionBudget configuration. PDBs are created by default and can be disabled if not required.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Set to false to disable PodDisruptionBudget creation",
+          "default": true
+        }
+      },
+      "additionalProperties": false
     },
     "node_selector": {
       "type": "object",

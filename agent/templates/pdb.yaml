@@ -1,3 +1,4 @@
+{{- if ne (.Values.pdb.enabled | toString) "false" }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
@@ -27,4 +28,5 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/part-of: hybrid-deployment
-      app.kubernetes.io/component: hd-job 
+      app.kubernetes.io/component: hd-job
+{{- end }}

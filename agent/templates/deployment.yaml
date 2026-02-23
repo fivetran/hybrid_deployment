@@ -14,7 +14,7 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: hd-agent
-      {{- include "hd.labels" . | nindent 6 }}
+      {{- include "hd.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:

@@ -1,7 +1,10 @@
 config:
   namespace:
-  data_volume_pvc: 
+  data_volume_pvc:
 
 agent:
   image: "us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/ldp-agent:production"
   image_pull_policy: "Always"
+
+pdb:
+  enabled: true

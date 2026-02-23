@@ -5,7 +5,12 @@
 {{- else }}
   {{- $required = mergeOverwrite $required (dict "app.kubernetes.io/app" "default-app") }}
 {{- end }}
-{{- $extra := .labels | default dict }}
+{{- $extra := dict }}
+{{- if .Values }}
+  {{- $extra = .Values.labels | default dict }}
+{{- else if .labels }}
+  {{- $extra = .labels }}
+{{- end }}
 {{- $merged := mergeOverwrite (deepCopy $required) (deepCopy $extra) }}
 {{- if .name }}
   {{- $merged = mergeOverwrite $merged (dict "app.kubernetes.io/name" .name) }}
@@ -13,6 +18,10 @@
 {{- if gt (len $merged) 0 }}
 {{- toYaml $merged }}
 {{- end }}
+{{- end }}
+
+{{- define "hd.selectorLabels" -}}
+{{- toYaml (dict "app.kubernetes.io/part-of" "hybrid-deployment" "app.kubernetes.io/app" .Release.Name) }}
 {{- end }}
 
 {{- define "hd.annotations" -}}
