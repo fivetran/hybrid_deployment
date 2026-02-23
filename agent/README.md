@@ -181,6 +181,15 @@ helm upgrade --install hd-agent \
 
 > **Note:** JVM memory values support standard Java memory units (e.g., 800m, 1g, 2G). Ensure the JVM memory settings are appropriate for your container memory limits and that both values match for optimal performance.
 
+## PodDisruptionBudgets
+
+By default, the chart creates PodDisruptionBudgets (PDBs) for both the agent (`hd-agent-pdb`) and the data processing jobs (`hd-job-pdb`), each with `minAvailable: 1`. If your environment does not require PDBs, you can disable them:
+
+```yaml
+pdb:
+  enabled: false
+```
+
 ## The data processing jobs
 The pipeline processing Jobs that will be started by the HD Agent to perform the pipeline processing will require more resources than the Agent.
 This depends on the connector, however for most 2 CPU and 4Gi memory per POD will be sufficient.
