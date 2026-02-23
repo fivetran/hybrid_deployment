@@ -46,6 +46,11 @@ spec:
         - name: hd-agent
           image: {{ if .Values.agent.image }}{{ .Values.agent.image }}{{ else }}{{ .Values.image }}{{ end }}
           imagePullPolicy: {{ if .Values.agent.image_pull_policy }}{{ .Values.agent.image_pull_policy }}{{ else }}{{ .Values.image_pull_policy }}{{ end }}
+          command:
+            - "java"
+            - "-Djava.security.egd=file:///dev/urandom"
+            - "-jar"
+            - "/app/binary.jar"
           resources:
             {{- if .Values.agent.resources }}{{ toYaml .Values.agent.resources | nindent 12 }}{{ else }}
             requests:
@@ -88,6 +93,8 @@ spec:
               value: {{ .Release.Name }}
             - name: release_version
               value: {{ .Chart.Version }}
+            - name: JDK_JAVA_OPTIONS
+              value: "-Xms{{ .Values.agent.jvm_xms | default "800m" }} -Xmx{{ .Values.agent.jvm_xmx | default "800m" }}"
             {{ if .Values.config.external_secret_name }}
             - name: external_secret_name
               value: {{ .Values.config.external_secret_name }}

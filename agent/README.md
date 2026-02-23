@@ -154,6 +154,33 @@ resources:
         memory: 2Gi
 ```
 
+### Agent JVM Memory Configuration
+The Hybrid Deployment agent runs on Java and uses JVM heap memory settings. By default, the agent uses 800MB for both initial (-Xms) and maximum (-Xmx) heap size.
+
+**Best Practice:** It's recommended to set both initial and maximum heap sizes to the same value. This ensures the JVM allocates the full heap immediately at startup, providing predictable memory usage and avoiding performance overhead from heap expansion during runtime.
+
+To adjust these default JVM memory values to lets say 1512M, you can configure them in your values.yaml:
+
+```yaml
+agent:
+  jvm_xms: "1512m"    # Initial heap size (default: 800m)
+  jvm_xmx: "1512m"    # Maximum heap size (default: 800m) - recommended to match jvm_xms
+```
+
+Or pass them via command line during installation:
+
+```bash
+helm upgrade --install hd-agent \
+ oci://us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/helm/hybrid-deployment-agent \
+ --set agent.jvm_xms=1024m \
+ --set agent.jvm_xmx=1024m \
+ --create-namespace \
+ --namespace fivetran \
+ --version 0.17.0
+```
+
+> **Note:** JVM memory values support standard Java memory units (e.g., 800m, 1g, 2G). Ensure the JVM memory settings are appropriate for your container memory limits and that both values match for optimal performance.
+
 ## The data processing jobs
 The pipeline processing Jobs that will be started by the HD Agent to perform the pipeline processing will require more resources than the Agent.
 This depends on the connector, however for most 2 CPU and 4Gi memory per POD will be sufficient.
