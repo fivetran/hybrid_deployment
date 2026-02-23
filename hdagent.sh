@@ -364,7 +364,7 @@ check_config() {
     fi
 }
 
-function check_service_reachability() {
+check_service_reachability() {
     # Check if we can reach Fivetran endpoints without authentication
     # This is purely to see if we can get to the endpoints, expected response is an error
 
@@ -501,6 +501,29 @@ status_agent() {
     else
         $RUN_CMD ps -f name="^/?controller" -f label=fivetran=ldp --format "table {{.ID}}\t{{.Names}}\t{{.Status}}"
     fi
+}
+
+get_container_id() {
+    local container_prefix=$1
+    container_id=$(docker ps -a -q -f name="^/${container_prefix}")
+    if [[ -z "$container_id" ]]; then
+        echo "NOT_FOUND"
+    else
+        echo "${container_id}"
+    fi
+}
+
+stop_workers() {
+    for container_prefix in "hd-base-activity-worker" "hd-workflow-worker"; do
+        CONTAINER_ID=$(get_container_id "$container_prefix")
+        if [[ "$CONTAINER_ID" == "NOT_FOUND" ]]; then
+           echo "Container '$container_prefix' does not exist"
+        else
+           echo "Stopping container '$container_prefix' (ID: $CONTAINER_ID)"
+	   docker stop $CONTAINER_ID > /dev/null 2>&1
+	   docker rm $CONTAINER_ID > /dev/null 2>&1
+        fi
+    done
 }
 
 stop_agent() {
@@ -642,6 +665,7 @@ case "$ACTION" in
     stop)
         log_hdagent_out "Stop Hybrid Deployment agent..."
         stop_agent
+	    stop_workers
         ;;
     status)
         echo "Agent status check..."
