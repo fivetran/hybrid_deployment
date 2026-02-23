@@ -665,7 +665,7 @@ case "$ACTION" in
     stop)
         log_hdagent_out "Stop Hybrid Deployment agent..."
         stop_agent
-	stop_workers
+	    stop_workers
         ;;
     status)
         echo "Agent status check..."
