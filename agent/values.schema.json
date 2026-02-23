@@ -171,6 +171,18 @@
               }
             }
           }
+        },
+        "jvm_xms": {
+          "type": "string",
+          "pattern": "^[0-9]+(m|g|k|M|G|K)?$",
+          "description": "Initial JVM heap size (e.g., 800m, 1g)",
+          "default": "800m"
+        },
+        "jvm_xmx": {
+          "type": "string", 
+          "pattern": "^[0-9]+(m|g|k|M|G|K)?$",
+          "description": "Maximum JVM heap size (e.g., 800m, 1g)",
+          "default": "800m"
         }
       }
     }
