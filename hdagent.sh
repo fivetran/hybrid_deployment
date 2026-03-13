@@ -505,7 +505,7 @@ status_agent() {
 
 get_container_id() {
     local container_prefix=$1
-    container_id=$(docker ps -a -q -f name="^/${container_prefix}")
+    container_id=$($RUN_CMD ps -a -q -f name="^/${container_prefix}")
     if [[ -z "$container_id" ]]; then
         echo "NOT_FOUND"
     else
@@ -520,8 +520,8 @@ stop_workers() {
            echo "Container '$container_prefix' does not exist"
         else
            echo "Stopping container '$container_prefix' (ID: $CONTAINER_ID)"
-	   docker stop $CONTAINER_ID > /dev/null 2>&1
-	   docker rm $CONTAINER_ID > /dev/null 2>&1
+	   $RUN_CMD stop $CONTAINER_ID > /dev/null 2>&1
+	   $RUN_CMD rm $CONTAINER_ID > /dev/null 2>&1
         fi
     done
 }
