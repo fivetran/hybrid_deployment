@@ -21,7 +21,9 @@
 {{- end }}
 
 {{- define "hd.selectorLabels" -}}
-{{- toYaml (dict "app.kubernetes.io/part-of" "hybrid-deployment" "app.kubernetes.io/app" .Release.Name) }}
+{{- $base := dict "app.kubernetes.io/part-of" "hybrid-deployment" "app.kubernetes.io/app" .Release.Name }}
+{{- $extra := .Values.labels | default dict }}
+{{- toYaml (mergeOverwrite $base $extra) }}
 {{- end }}
 
 {{- define "hd.annotations" -}}
