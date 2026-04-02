@@ -19,6 +19,9 @@ HD_AGENT_DEPLOYMENT_CONTAINER_NAME="hd-agent"
 # defined in templates/configmap.yaml
 HD_AGENT_CONFIG_NAME="hd-agent-config"
 NAMESPACE="default"
+# Set to true to collect full node provisioner (Karpenter or Cluster Autoscaler) configuration (YAML).
+# Set to false to collect basic listing only (names and status), or use the -s flag at runtime.
+GET_PROVISIONER_DETAILS=true
 SCRIPT_PATH="$(realpath "$0")"
 BASE_DIR="$(dirname "$SCRIPT_PATH")"
 DIAG_DIR="$BASE_DIR/k8s_stats"
@@ -36,7 +39,10 @@ if [ "$UID" -eq 0 ]; then
 fi
 
 function usage() {
-    echo -e "Usage: $0 [-n <namespace>] [-h]\n"
+    echo -e "Usage: $0 [-n <namespace>] [-s] [-h]"
+    echo -e "  -n  Kubernetes namespace (default: default)"
+    echo -e "  -s  Skip full node provisioner (Karpenter or Cluster Autoscaler) YAML dump (only collect basic names and info)"
+    echo -e "  -h  Show this help message\n"
     exit 1
 }
 
@@ -128,16 +134,46 @@ function log_agent_info() {
     fi
 
     kubectl get configmaps -n "$NAMESPACE" > "$DIAG_DIR/configmap_listing.log" 2>&1
-    kubectl get configmap "$HD_AGENT_CONFIG_NAME" -n "$NAMESPACE" -o yaml | grep -v 'token:' > "$DIAG_DIR/agent_config_map.log" 2>&1   
+    kubectl get configmap "$HD_AGENT_CONFIG_NAME" -n "$NAMESPACE" -o yaml | grep -v 'token:' > "$DIAG_DIR/agent_config_map.log" 2>&1
     kubectl get secrets -n "$NAMESPACE" > "$DIAG_DIR/secrets_listing.log" 2>&1
+
+    # Collect full namespace events in yaml (captures pod sandbox/CNI failures across all nodes, not just the agent node)
+    kubectl get events -n "$NAMESPACE" --sort-by='.lastTimestamp' -o yaml > "$DIAG_DIR/namespace_events.log" 2>&1
 
     local HD_AGENT_NODE_NAME=$(kubectl get pod "$AGENT_POD" -n "$NAMESPACE" -o jsonpath="{.spec.nodeName}")
     kubectl describe node "$HD_AGENT_NODE_NAME" > "$DIAG_DIR/node_description.log" 2>&1
     kubectl get nodes -o custom-columns=Name:.metadata.name,Created:.metadata.creationTimestamp,nCPU:.status.capacity.cpu,Memory:.status.capacity.memory  > "$DIAG_DIR/node_listing.log" 2>&1
     kubectl get nodes -o wide > "$DIAG_DIR/nodes_wide.log" 2>&1
     kubectl get nodes --show-labels > "$DIAG_DIR/nodes_labels.log" 2>&1
-    # list nodepools if configured.
-    kubectl get nodepools -o wide > "$DIAG_DIR/nodepools.log" 2>&1
+
+    # Collect node provisioner details (Karpenter or Cluster Autoscaler)
+    local HAS_KARPENTER=false
+    if kubectl api-resources --api-group=karpenter.sh --no-headers 2>/dev/null | grep -q nodepools; then
+        HAS_KARPENTER=true
+    fi
+
+    if [ "$HAS_KARPENTER" = true ]; then
+        if [ "$GET_PROVISIONER_DETAILS" = true ]; then
+            if ! kubectl get nodepools.karpenter.sh -o yaml > "$DIAG_DIR/karpenter_nodepools.log" 2>&1; then
+                kubectl get nodepools.karpenter.sh/v1beta1 -o yaml > "$DIAG_DIR/karpenter_nodepools.log" 2>/dev/null
+            fi
+            kubectl get ec2nodeclasses.karpenter.k8s.aws -o yaml > "$DIAG_DIR/karpenter_ec2nodeclass.log" 2>/dev/null
+        else
+            if ! kubectl get nodepools.karpenter.sh -o wide > "$DIAG_DIR/karpenter_nodepools.log" 2>&1; then
+                kubectl get nodepools.karpenter.sh/v1beta1 -o wide > "$DIAG_DIR/karpenter_nodepools.log" 2>/dev/null
+            fi
+            kubectl get ec2nodeclasses.karpenter.k8s.aws -o wide > "$DIAG_DIR/karpenter_ec2nodeclass.log" 2>/dev/null
+        fi
+    else
+        # Check for Cluster Autoscaler
+        if [ "$GET_PROVISIONER_DETAILS" = true ]; then
+            kubectl get deployment -n kube-system -l app=cluster-autoscaler -o yaml > "$DIAG_DIR/cluster_autoscaler.log" 2>/dev/null
+            kubectl get configmap -n kube-system cluster-autoscaler-status -o yaml > "$DIAG_DIR/cluster_autoscaler_status.log" 2>/dev/null
+        else
+            kubectl get deployment -n kube-system -l app=cluster-autoscaler -o wide > "$DIAG_DIR/cluster_autoscaler.log" 2>/dev/null
+            kubectl get configmap -n kube-system cluster-autoscaler-status -o wide > "$DIAG_DIR/cluster_autoscaler_status.log" 2>/dev/null
+        fi
+    fi
 
     kubectl get serviceaccounts -n "$NAMESPACE" > "$DIAG_DIR/service_accounts.log" 2>&1
     kubectl get roles -n "$NAMESPACE" > "$DIAG_DIR/roles.log" 2>&1
@@ -148,9 +184,10 @@ function log_agent_info() {
     kubectl get pvc -n "$NAMESPACE" -o yaml > "$DIAG_DIR/pvc-detail.log" 2>&1
 }
 
-while getopts "n:h" opt; do
+while getopts "n:sh" opt; do
     case $opt in
         n) NAMESPACE="$OPTARG" ;;
+        s) GET_PROVISIONER_DETAILS=false ;;
         h) usage ;;
         *) usage ;;
     esac
