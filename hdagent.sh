@@ -25,7 +25,7 @@ MIN_DOCKER_VERSION="20.10.17"
 MIN_PODMAN_VERSION="4.5.0"
 TIMEOUT=5
 CLOCK_SKEW_WARNING_THRESHOLD_SECONDS=30
-CLOCK_SKEW_ERROR_THRESHOLD_SECONDS=60
+CLOCK_SKEW_REFERENCE_URL="https://ldp.orchestrator.fivetran.com"
 
 BASE_DIR=$(pwd)
 SCRIPT_PATH="$(realpath "$0")"
@@ -46,7 +46,6 @@ RUNTIME=""
 INTERNAL_SOCKET=""
 CONTAINER_ENV_TYPE=""
 SKIP_CHECKS=""
-CLOCK_SKEW_REFERENCE_REACHABLE="false"
 WARNINGS=()
 ERRORS=()
 
@@ -399,77 +398,26 @@ check_service_reachability() {
         if ! curl -s --max-time ${TIMEOUT} -o /dev/null "$url" 2>/dev/null; then
             local name=$(echo "$url" | sed 's|https://||' | sed 's|/.*||')
             ERRORS+=("$name is not reachable")
-        else
-            CLOCK_SKEW_REFERENCE_REACHABLE="true"
         fi
     done
-}
-
-get_fivetran_service_time_epoch() {
-    local time_check_urls=(
-        "https://api.fivetran.com/v1/hybrid-deployment-agents"
-        "https://ldp.orchestrator.fivetran.com"
-    )
-    local url=""
-    local response_headers=""
-    local server_date_header=""
-    local server_epoch=""
-
-    for url in "${time_check_urls[@]}"; do
-        response_headers=$(curl -sSI --max-time ${TIMEOUT} "$url" 2>/dev/null)
-        server_date_header=$(printf "%s\n" "$response_headers" | awk 'tolower($0) ~ /^date:/ { sub(/\r$/, "", $0); print substr($0, 7); exit }')
-        if [[ -n "$server_date_header" ]]; then
-            # date -d is GNU date syntax, which is available on supported Linux hosts.
-            server_epoch=$(date -u -d "$server_date_header" +%s 2>/dev/null)
-            if [[ -n "$server_epoch" ]]; then
-                echo "$server_epoch"
-                return 0
-            fi
-        fi
-    done
-
-    return 1
 }
 
 check_clock_skew() {
-    local server_epoch=""
-    local local_epoch=""
-    local skew_seconds=0
-    local absolute_skew_seconds=0
-    local skew_direction="in sync"
-    local skew_message=""
+    local server_date
+    server_date=$(curl -sSI --max-time "${TIMEOUT}" "$CLOCK_SKEW_REFERENCE_URL" 2>/dev/null \
+        | awk 'tolower($0) ~ /^date:/ { sub(/\r$/, "", $0); print substr($0, 7); exit }')
 
-    if [[ "$CLOCK_SKEW_REFERENCE_REACHABLE" != "true" ]]; then
-        return
-    fi
-
-    server_epoch=$(get_fivetran_service_time_epoch)
-    if [[ -z "$server_epoch" ]]; then
-        WARNINGS+=("Unable to determine HTTP Date reported by a reachable endpoint, skipping clock skew check")
-        return
-    fi
-
-    local_epoch=$(date -u +%s 2>/dev/null)
-    if [[ -z "$local_epoch" ]]; then
+    local server_epoch local_epoch abs_skew
+    server_epoch=$(date -u -d "$server_date" +%s 2>/dev/null || true)
+    local_epoch=$(date -u +%s 2>/dev/null || true)
+    [[ -n "$server_date" && -n "$server_epoch" && -n "$local_epoch" ]] || {
         WARNINGS+=("Unable to determine local system time, skipping clock skew check")
         return
-    fi
+    }
 
-    skew_seconds=$((local_epoch - server_epoch))
-    absolute_skew_seconds=${skew_seconds#-}
-
-    if (( skew_seconds > 0 )); then
-        skew_direction="ahead"
-    elif (( skew_seconds < 0 )); then
-        skew_direction="behind"
-    fi
-
-    skew_message="System clock differs from HTTP Date reported by a reachable endpoint by ${absolute_skew_seconds}s (${skew_direction})"
-
-    if (( absolute_skew_seconds >= CLOCK_SKEW_ERROR_THRESHOLD_SECONDS )); then
-        ERRORS+=("Clock skew check failed: ${skew_message}. The agent will not start because clock skew at or above ${CLOCK_SKEW_ERROR_THRESHOLD_SECONDS}s can cause JWT token validation failures. Synchronize the host with NTP and retry")
-    elif (( absolute_skew_seconds >= CLOCK_SKEW_WARNING_THRESHOLD_SECONDS )); then
-        WARNINGS+=("${skew_message}. Verify NTP synchronization before running setup tests")
+    abs_skew=$(( local_epoch > server_epoch ? local_epoch - server_epoch : server_epoch - local_epoch ))
+    if (( abs_skew > CLOCK_SKEW_WARNING_THRESHOLD_SECONDS )); then
+        WARNINGS+=("System clock differs from HTTP Date reported by ${CLOCK_SKEW_REFERENCE_URL} by ${abs_skew}s. Verify NTP synchronization before running setup tests")
     fi
 }
 

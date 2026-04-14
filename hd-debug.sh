@@ -58,7 +58,7 @@ mkdir -p $STATS_DIR 2>/dev/null
 echo -e "Stats location: $STATS_DIR\n"
 
 CLOCK_SKEW_WARNING_THRESHOLD_SECONDS=30
-CLOCK_SKEW_ERROR_THRESHOLD_SECONDS=60
+CLOCK_SKEW_REFERENCE_URL="https://ldp.orchestrator.fivetran.com"
 CONFIG_FILE=$BASE_DIR/conf/config.json
 LOGDIR=$BASE_DIR/logs
 TOKEN=""
@@ -289,26 +289,6 @@ function log_network_stats () {
     cat /etc/resolv.conf |grep -v "^#" > "$STATS_DIR/system_etc_resolv_conf.log" 2>&1
 }
 
-function log_time_sync_status() {
-    if command -v timedatectl &> /dev/null; then
-        timedatectl status > "$STATS_DIR/system_timedatectl_status.log" 2>&1
-    else
-        echo "timedatectl is not installed/used or not in the PATH." > "$STATS_DIR/system_timedatectl_status.log"
-    fi
-
-    if command -v chronyc &> /dev/null; then
-        chronyc tracking > "$STATS_DIR/system_chronyc_tracking.log" 2>&1
-    else
-        echo "chronyc is not installed/used or not in the PATH." > "$STATS_DIR/system_chronyc_tracking.log"
-    fi
-
-    if command -v ntpq &> /dev/null; then
-        ntpq -p > "$STATS_DIR/system_ntpq_p.log" 2>&1
-    else
-        echo "ntpq is not installed/used or not in the PATH." > "$STATS_DIR/system_ntpq_p.log"
-    fi
-}
-
 function log_user () {
     # Log the user information to a file
     whoami > "$STATS_DIR/current_user.log" 2>&1
@@ -395,98 +375,36 @@ function test_orchestrator_com () {
     curl -v https://ldp.orchestrator.fivetran.com > "$STATS_DIR/connectivity_orchestrator_fivetran_com.log" 2>&1
 }
 
-function get_reference_endpoint_http_date() {
-    local time_check_urls=(
-        "https://api.fivetran.com/v1/hybrid-deployment-agents"
-        "https://ldp.orchestrator.fivetran.com"
-    )
-    local url=""
-    local response_headers=""
-    local server_date_header=""
-
-    for url in "${time_check_urls[@]}"; do
-        response_headers=$(curl -sSI --max-time 5 "$url" 2>/dev/null)
-        server_date_header=$(printf "%s\n" "$response_headers" | awk 'tolower($0) ~ /^date:/ { sub(/\r$/, "", $0); print substr($0, 7); exit }')
-        if [[ -n "$server_date_header" ]]; then
-            echo "${url}|${server_date_header}"
-            return 0
-        fi
-    done
-
-    return 1
-}
-
 function log_clock_skew_check() {
     local log_file="$STATS_DIR/system_clock_skew_check.log"
-    local local_utc_time=""
-    local local_epoch=""
-    local reference_info=""
-    local reference_url=""
-    local reference_http_date=""
-    local reference_epoch=""
-    local skew_seconds=0
-    local absolute_skew_seconds=0
-    local skew_direction="in sync"
-    local status="OK"
+    local server_date server_epoch local_epoch abs_skew
 
-    local_utc_time=$(date -u +"%Y-%m-%d %H:%M:%S UTC" 2>/dev/null)
-    local_epoch=$(date -u +%s 2>/dev/null)
+    server_date=$(curl -sSI --max-time 5 "$CLOCK_SKEW_REFERENCE_URL" 2>/dev/null \
+        | awk 'tolower($0) ~ /^date:/ { sub(/\r$/, "", $0); print substr($0, 7); exit }')
+    server_epoch=$(date -u -d "$server_date" +%s 2>/dev/null || true)
+    local_epoch=$(date -u +%s 2>/dev/null || true)
 
     {
         echo "Clock skew diagnostic"
-        echo "Local UTC time: ${local_utc_time:-unavailable}"
+        echo "Local UTC time: $(date -u +"%Y-%m-%d %H:%M:%S UTC" 2>/dev/null || echo unavailable)"
+        echo "Reference endpoint: $CLOCK_SKEW_REFERENCE_URL"
+        echo "Reference HTTP Date: $server_date"
     } > "$log_file"
 
-    if ! command -v curl &> /dev/null; then
-        echo "Result: curl not available, unable to determine HTTP Date from a reachable endpoint." >> "$log_file"
+    [[ -n "$server_date" ]] || {
+        echo "Result: unable to determine HTTP Date from reference endpoint." >> "$log_file"
         return
-    fi
-
-    if [[ -z "$local_epoch" ]]; then
+    }
+    [[ -n "$server_epoch" && -n "$local_epoch" ]] || {
         echo "Result: unable to determine local system time." >> "$log_file"
         return
-    fi
+    }
 
-    reference_info=$(get_reference_endpoint_http_date)
-    if [[ -z "$reference_info" ]]; then
-        echo "Result: unable to determine HTTP Date from a reachable endpoint." >> "$log_file"
-        return
-    fi
-
-    reference_url=${reference_info%%|*}
-    reference_http_date=${reference_info#*|}
-    # date -d is GNU date syntax, which is available on supported Linux hosts.
-    reference_epoch=$(date -u -d "$reference_http_date" +%s 2>/dev/null)
-
+    abs_skew=$(( local_epoch > server_epoch ? local_epoch - server_epoch : server_epoch - local_epoch ))
     {
-        echo "Reference endpoint: $reference_url"
-        echo "Reference HTTP Date: $reference_http_date"
-    } >> "$log_file"
-
-    if [[ -z "$reference_epoch" ]]; then
-        echo "Result: unable to parse HTTP Date from reachable endpoint." >> "$log_file"
-        return
-    fi
-
-    skew_seconds=$((local_epoch - reference_epoch))
-    absolute_skew_seconds=${skew_seconds#-}
-
-    if (( skew_seconds > 0 )); then
-        skew_direction="ahead"
-    elif (( skew_seconds < 0 )); then
-        skew_direction="behind"
-    fi
-
-    if (( absolute_skew_seconds >= CLOCK_SKEW_ERROR_THRESHOLD_SECONDS )); then
-        status="ERROR-LIKE"
-    elif (( absolute_skew_seconds >= CLOCK_SKEW_WARNING_THRESHOLD_SECONDS )); then
-        status="WARNING"
-    fi
-
-    {
-        echo "Clock skew: ${absolute_skew_seconds}s (${skew_direction})"
-        echo "Thresholds: warning>=${CLOCK_SKEW_WARNING_THRESHOLD_SECONDS}s error>=${CLOCK_SKEW_ERROR_THRESHOLD_SECONDS}s"
-        echo "Status: $status"
+        echo "Clock skew: ${abs_skew}s"
+        echo "Threshold: warning>${CLOCK_SKEW_WARNING_THRESHOLD_SECONDS}s"
+        echo "Status: $([[ $abs_skew -gt $CLOCK_SKEW_WARNING_THRESHOLD_SECONDS ]] && echo WARNING || echo OK)"
     } >> "$log_file"
 }
 
@@ -573,7 +491,6 @@ log_config
 log_hdagent_logs
 log_resources
 log_network_stats
-log_time_sync_status
 log_clock_skew_check
 get_conntrack_values
 
