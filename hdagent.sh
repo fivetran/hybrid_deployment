@@ -417,7 +417,7 @@ check_clock_skew() {
 
     abs_skew=$(( local_epoch > server_epoch ? local_epoch - server_epoch : server_epoch - local_epoch ))
     if (( abs_skew > CLOCK_SKEW_WARNING_THRESHOLD_SECONDS )); then
-        WARNINGS+=("System clock differs from HTTP Date reported by ${CLOCK_SKEW_REFERENCE_URL} by ${abs_skew}s. Verify NTP synchronization before running setup tests")
+        WARNINGS+=("System clock differs from the reference time by ${abs_skew}s. Clock skew can cause some connector syncs to fail. Verify NTP synchronization before running setup tests")
     fi
 }
 
