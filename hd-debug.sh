@@ -179,10 +179,25 @@ function log_container_info() {
         docker system df -v > "$STATS_DIR/docker_system_df_v.log" 2>&1
         ps -ef|grep -i docker > "$STATS_DIR/docker_process.log" 2>&1
         
-        docker logs $(docker ps --filter "name=^/controller" --format "{{.Names}}") > "$STATS_DIR/docker_controller.log" 2>&1
-        docker inspect $(docker ps --filter "name=^/controller" --format "{{.Names}}") > "$STATS_DIR/docker_controller_inspect.log" 2>&1
-        sed -E '/"TOKEN=.*"/d; /"*.client_private_key=.*"/d; /"*.client_cert=.*"/d; /"*.clientCert=.*"/d' "$STATS_DIR/docker_controller_inspect.log" > "$STATS_DIR/docker_agent_inspect.log"
-        rm $STATS_DIR/docker_controller_inspect.log
+        # Find the HD agent container - first try the standard 'controller' name
+        CONTROLLER_NAMES=$(docker ps --filter "name=^/controller" --format "{{.Names}}")
+        # Fallback: customer may have renamed the container; search for any running container with 'fivetran' in the name
+        if [ -z "$CONTROLLER_NAMES" ]; then
+            echo "No container named 'controller' found. Searching for containers with 'fivetran' in name..." >&2
+            CONTROLLER_NAMES=$(docker ps --filter "name=fivetran" --format "{{.Names}}")
+        fi
+        if [ -n "$CONTROLLER_NAMES" ]; then
+            echo "HD agent container(s) found: $CONTROLLER_NAMES" >&2
+            docker logs $CONTROLLER_NAMES > "$STATS_DIR/docker_controller.log" 2>&1
+            docker inspect $CONTROLLER_NAMES > "$STATS_DIR/docker_controller_inspect.log" 2>&1
+            sed -E '/"TOKEN=.*"/d; /"*.client_private_key=.*"/d; /"*.client_cert=.*"/d; /"*.clientCert=.*"/d' "$STATS_DIR/docker_controller_inspect.log" > "$STATS_DIR/docker_agent_inspect.log"
+            rm $STATS_DIR/docker_controller_inspect.log
+        else
+            echo "No HD agent container found (tried 'controller' and 'fivetran' name filters)." > "$STATS_DIR/docker_controller.log"
+            echo "Running containers:" >> "$STATS_DIR/docker_controller.log"
+            docker ps --format "{{.Names}} {{.Image}}" >> "$STATS_DIR/docker_controller.log" 2>&1
+            echo "No HD agent container found." > "$STATS_DIR/docker_agent_inspect.log"
+        fi
 
         ls -al $HOME/.docker > "$STATS_DIR/docker_home.log" 2>&1
         if [ -f $HOME/.docker/config.json ]; then
@@ -201,10 +216,25 @@ function log_container_info() {
         podman system df -v > "$STATS_DIR/podman_system_df_v.log" 2>&1
         ps -ef|grep -i podman > "$STATS_DIR/podman_process.log" 2>&1
 
-        podman logs $(podman ps --filter "name=^/controller" --format "{{.Names}}") > "$STATS_DIR/podman_controller.log" 2>&1
-        podman inspect $(podman ps --filter "name=^/controller" --format "{{.Names}}") > "$STATS_DIR/podman_controller_inspect.log" 2>&1
-        sed -E '/"TOKEN=.*"/d; /"*.client_private_key=.*"/d; /"*.client_cert=.*"/d; /"*.clientCert=.*"/d' "$STATS_DIR/podman_controller_inspect.log" > "$STATS_DIR/podman_agent_inspect.log"
-        rm $STATS_DIR/podman_controller_inspect.log
+        # Find the HD agent container - first try the standard 'controller' name
+        CONTROLLER_NAMES=$(podman ps --filter "name=^/controller" --format "{{.Names}}")
+        # Fallback: customer may have renamed the container; search for any running container with 'fivetran' in the name
+        if [ -z "$CONTROLLER_NAMES" ]; then
+            echo "No container named 'controller' found. Searching for containers with 'fivetran' in name..." >&2
+            CONTROLLER_NAMES=$(podman ps --filter "name=fivetran" --format "{{.Names}}")
+        fi
+        if [ -n "$CONTROLLER_NAMES" ]; then
+            echo "HD agent container(s) found: $CONTROLLER_NAMES" >&2
+            podman logs $CONTROLLER_NAMES > "$STATS_DIR/podman_controller.log" 2>&1
+            podman inspect $CONTROLLER_NAMES > "$STATS_DIR/podman_controller_inspect.log" 2>&1
+            sed -E '/"TOKEN=.*"/d; /"*.client_private_key=.*"/d; /"*.client_cert=.*"/d; /"*.clientCert=.*"/d' "$STATS_DIR/podman_controller_inspect.log" > "$STATS_DIR/podman_agent_inspect.log"
+            rm $STATS_DIR/podman_controller_inspect.log
+        else
+            echo "No HD agent container found (tried 'controller' and 'fivetran' name filters)." > "$STATS_DIR/podman_controller.log"
+            echo "Running containers:" >> "$STATS_DIR/podman_controller.log"
+            podman ps --format "{{.Names}} {{.Image}}" >> "$STATS_DIR/podman_controller.log" 2>&1
+            echo "No HD agent container found." > "$STATS_DIR/podman_agent_inspect.log"
+        fi
 
         # rootless (user) podman config
         ls -al $HOME/.config/containers > "$STATS_DIR/podman_home.log" 2>&1
@@ -243,6 +273,15 @@ function log_base_dir_info () {
     ls -altr $BASE_DIR > "$STATS_DIR/base_dir_file_listing.log" 2>&1
     du -sh $BASE_DIR > "$STATS_DIR/base_dir_size.log" 2>&1
     du -sh $BASE_DIR/* >> "$STATS_DIR/base_dir_size.log" 2>&1
+
+    # Capture docker-compose file if the agent was started via docker-compose
+    for compose_file in "$BASE_DIR/docker-compose.yml" "$BASE_DIR/docker-compose.yaml"; do
+        if [ -f "$compose_file" ]; then
+            echo "Found docker-compose file: $compose_file" >&2
+            cat "$compose_file" > "$STATS_DIR/docker_compose.log" 2>&1
+            break
+        fi
+    done
 
     if [ -n "$BASE_DIR/log" ]; then
         ls -altr $BASE_DIR/logs > "$STATS_DIR/base_dir_logs.log" 2>&1
