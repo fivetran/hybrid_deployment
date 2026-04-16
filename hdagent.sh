@@ -403,6 +403,11 @@ check_service_reachability() {
 }
 
 check_clock_skew() {
+    if ! command -v curl &> /dev/null; then
+        WARNINGS+=("curl not available, skipping clock skew check")
+        return
+    fi
+
     local server_date
     server_date=$(curl -sSI --max-time "${TIMEOUT}" "$CLOCK_SKEW_REFERENCE_URL" 2>/dev/null \
         | awk 'tolower($0) ~ /^date:/ { sub(/\r$/, "", $0); print substr($0, 7); exit }')
