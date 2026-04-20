@@ -24,6 +24,8 @@ fi
 MIN_DOCKER_VERSION="20.10.17"
 MIN_PODMAN_VERSION="4.5.0"
 TIMEOUT=5
+CLOCK_SKEW_WARNING_THRESHOLD_SECONDS=30
+CLOCK_SKEW_REFERENCE_URL="https://ldp.orchestrator.fivetran.com"
 
 BASE_DIR=$(pwd)
 SCRIPT_PATH="$(realpath "$0")"
@@ -400,6 +402,30 @@ check_service_reachability() {
     done
 }
 
+check_clock_skew() {
+    if ! command -v curl &> /dev/null; then
+        WARNINGS+=("curl not available, skipping clock skew check")
+        return
+    fi
+
+    local server_date
+    server_date=$(curl -sSI --max-time "${TIMEOUT}" "$CLOCK_SKEW_REFERENCE_URL" 2>/dev/null \
+        | awk 'tolower($0) ~ /^date:/ { sub(/\r$/, "", $0); print substr($0, 7); exit }')
+
+    local server_epoch local_epoch abs_skew
+    server_epoch=$(date -u -d "$server_date" +%s 2>/dev/null || true)
+    local_epoch=$(date -u +%s 2>/dev/null || true)
+    [[ -n "$server_date" && -n "$server_epoch" && -n "$local_epoch" ]] || {
+        WARNINGS+=("Unable to determine local system time, skipping clock skew check")
+        return
+    }
+
+    abs_skew=$(( local_epoch > server_epoch ? local_epoch - server_epoch : server_epoch - local_epoch ))
+    if (( abs_skew > CLOCK_SKEW_WARNING_THRESHOLD_SECONDS )); then
+        WARNINGS+=("System clock differs from the reference time by ${abs_skew}s. Clock skew can cause some connector syncs to fail. Verify NTP synchronization before running setup tests")
+    fi
+}
+
 setup_kerberos_auth_if_enabled() {
     local enable_kerberos=""
     if [[ -f "$CONFIG_FILE" ]]; then
@@ -465,6 +491,7 @@ validate_prerequisites() {
     check_rootless_linger
     check_config
     check_service_reachability
+    check_clock_skew
 
     if [ ${#WARNINGS[@]} -gt 0 ] || [ ${#ERRORS[@]} -gt 0 ]; then
         echo ""

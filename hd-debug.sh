@@ -57,6 +57,8 @@ STATS_DIR="$BASE_DIR/stats"
 mkdir -p $STATS_DIR 2>/dev/null
 echo -e "Stats location: $STATS_DIR\n"
 
+CLOCK_SKEW_WARNING_THRESHOLD_SECONDS=30
+CLOCK_SKEW_REFERENCE_URL="https://ldp.orchestrator.fivetran.com"
 CONFIG_FILE=$BASE_DIR/conf/config.json
 LOGDIR=$BASE_DIR/logs
 TOKEN=""
@@ -373,6 +375,39 @@ function test_orchestrator_com () {
     curl -v https://ldp.orchestrator.fivetran.com > "$STATS_DIR/connectivity_orchestrator_fivetran_com.log" 2>&1
 }
 
+function log_clock_skew_check() {
+    local log_file="$STATS_DIR/system_clock_skew_check.log"
+    local server_date server_epoch local_epoch abs_skew
+
+    server_date=$(curl -sSI --max-time 5 "$CLOCK_SKEW_REFERENCE_URL" 2>/dev/null \
+        | awk 'tolower($0) ~ /^date:/ { sub(/\r$/, "", $0); print substr($0, 7); exit }')
+    server_epoch=$(date -u -d "$server_date" +%s 2>/dev/null || true)
+    local_epoch=$(date -u +%s 2>/dev/null || true)
+
+    {
+        echo "Clock skew diagnostic"
+        echo "Local UTC time: $(date -u +"%Y-%m-%d %H:%M:%S UTC" 2>/dev/null || echo unavailable)"
+        echo "Reference endpoint: $CLOCK_SKEW_REFERENCE_URL"
+        echo "Reference HTTP Date: $server_date"
+    } > "$log_file"
+
+    [[ -n "$server_date" ]] || {
+        echo "Result: unable to determine HTTP Date from reference endpoint." >> "$log_file"
+        return
+    }
+    [[ -n "$server_epoch" && -n "$local_epoch" ]] || {
+        echo "Result: unable to determine local system time." >> "$log_file"
+        return
+    }
+
+    abs_skew=$(( local_epoch > server_epoch ? local_epoch - server_epoch : server_epoch - local_epoch ))
+    {
+        echo "Clock skew: ${abs_skew}s"
+        echo "Threshold: warning>${CLOCK_SKEW_WARNING_THRESHOLD_SECONDS}s"
+        echo "Status: $([[ $abs_skew -gt $CLOCK_SKEW_WARNING_THRESHOLD_SECONDS ]] && echo WARNING || echo OK)"
+    } >> "$log_file"
+}
+
 function get_conntrack_values() {
     # Review current conntrack values
     cat /proc/sys/net/netfilter/nf_conntrack_count > "$STATS_DIR/system_proc_sys_net_netfilter_nf_conntrack_count.log"
@@ -456,6 +491,7 @@ log_config
 log_hdagent_logs
 log_resources
 log_network_stats
+log_clock_skew_check
 get_conntrack_values
 
 if [[ "$EXCLUDE_ENV" == "true" ]]; 
@@ -485,4 +521,3 @@ cd -
 
 echo -e "done.\n"
 echo -e "Logs are available in $STATS_DIR/logs-$CONTROLLER_ID.tar.gz\n"
-
