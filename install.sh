@@ -108,7 +108,13 @@ else
     cat > "$CONFIG_FILE" <<EOF
 {
   "token": "$TOKEN",
-  "host_selinux_enabled": "$SELINUX_STATUS"
+  "host_selinux_enabled": "$SELINUX_STATUS",
+  "use_job_worker_model": "true",
+  "use_service_model": "true",
+  "docker_pull_timeout_seconds": 900,
+  "activity_worker_default_type": "4g",
+  "activity_worker_min_count_4g": 2,
+  "activity_worker_max_count_4g": 2
 }
 EOF
 fi
