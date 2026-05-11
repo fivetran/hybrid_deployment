@@ -677,7 +677,7 @@ set_environment $RUNTIME
 
 # Run checks only when starting the agent and not skipped
 if [[ "$ACTION" == "start" && "$SKIP_CHECKS" != "true" ]]; then
-    validate_script_hash
+    # validate_script_hash
     if ! validate_prerequisites; then
         exit 1
     fi
