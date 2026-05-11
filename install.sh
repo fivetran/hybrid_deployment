@@ -51,8 +51,8 @@ echo -e "Installing Hybrid Deployment Agent...\n"
 # Default install location is $HOME/fivetran
 BASE_DIR=$HOME/fivetran
 
-AGENT_URL="https://raw.githubusercontent.com/fivetran/hybrid_deployment/main/hdagent.sh"
-DEBUG_URL="https://raw.githubusercontent.com/fivetran/hybrid_deployment/main/hd-debug.sh"
+AGENT_URL="https://raw.githubusercontent.com/fivetran/hybrid_deployment/aelsnz_worker_model/hdagent.sh"
+DEBUG_URL="https://raw.githubusercontent.com/fivetran/hybrid_deployment/aelsnz_worker_model/hd-debug.sh"
 DEBUG_SCIRPT=hd-debug.sh
 AGENT_SCRIPT=hdagent.sh
 CONFIG_FILE=$BASE_DIR/conf/config.json

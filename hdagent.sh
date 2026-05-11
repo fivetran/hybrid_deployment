@@ -100,7 +100,7 @@ set_environment() {
         INTERNAL_SOCKET="/var/run/docker.sock"
         DOCKER_ROOT=$(docker info --format '{{.DockerRootDir}}')
         STORAGE_DIR="$DOCKER_ROOT"
-        if [ "$DOCKER_ROOT" == "$HOME/.local/share/docker" ]; then
+        if [ "$DOCKER_ROOT" == "$HOME/.local/share/docker" ] || [ "$DOCKER_ROOT" != "/var/lib/docker" ]; then
             uid=$(id -u)
             SOCKET="/var/run/user/$uid/docker.sock"
         else
