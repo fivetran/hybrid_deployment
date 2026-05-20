@@ -63,12 +63,17 @@ function check_helm() {
 }
 
 function get_controller_id () {
-    CONTROLLER_ID=$(kubectl get secret hd-agent-secret -n $NAMESPACE -o jsonpath='{.data.controller_id}' 2>/dev/null | base64 -d 2>/dev/null)
+    # Token secret is named <deployment>-token-secret; controller ID is the prefix before ':' in the decoded token
+    local TOKEN_SECRET="${AGENT_DEPLOYMENT}-token-secret"
+    local TOKEN
+    # stringData in the secret template causes k8s to re-encode the already-base64 token, so decode twice
+    TOKEN=$(kubectl get secret "$TOKEN_SECRET" -n "$NAMESPACE" -o jsonpath='{.data.token}' 2>/dev/null | base64 -d 2>/dev/null | base64 -d 2>/dev/null)
+    CONTROLLER_ID=$(echo "$TOKEN" | cut -d: -f1)
 
-    if [ ! -z "$CONTROLLER_ID" ]; then
+    if [ -n "$CONTROLLER_ID" ]; then
         echo "Controller ID: $CONTROLLER_ID"
     else
-        echo "Warning: Could not extract controller_id from secret"
+        echo "Warning: Could not extract controller_id from secret $TOKEN_SECRET"
         CONTROLLER_ID="unknown"
     fi
 }
@@ -106,6 +111,7 @@ function log_agent_info() {
 
     get_agent_deployment_name
     get_agent_pod_name
+    get_controller_id
 
     if [ -z "$AGENT_DEPLOYMENT" ] || [ -z "$AGENT_POD" ]; then
         echo "No HD Agent deployment or pod found in namespace '$NAMESPACE'."
@@ -182,6 +188,18 @@ function log_agent_info() {
     kubectl get pv -n "$NAMESPACE" -o wide > "$DIAG_DIR/pv.log" 2>&1
     kubectl get pvc -n "$NAMESPACE" -o wide > "$DIAG_DIR/pvc.log" 2>&1
     kubectl get pvc -n "$NAMESPACE" -o yaml > "$DIAG_DIR/pvc-detail.log" 2>&1
+
+    # Collect full pod spec (including affinity) for all hybrid-deployment pods, redacting cert/key env vars
+    local HD_PODS
+    HD_PODS=$(kubectl get pods -n "$NAMESPACE" -l "app.kubernetes.io/part-of=hybrid-deployment" --no-headers -o custom-columns=":metadata.name")
+    if [ -n "$HD_PODS" ]; then
+        for POD in $HD_PODS; do
+            kubectl get pod "$POD" -n "$NAMESPACE" -o yaml \
+                | awk '/- name: orchestrator\.client_cert|- name: orchestrator\.client_private_key/{skip=1;next} skip && /- name:/{skip=0} !skip{print}' \
+                >> "$DIAG_DIR/pod_specs.log" 2>&1
+            echo -e "\n" >> "$DIAG_DIR/pod_specs.log"
+        done
+    fi
 }
 
 while getopts "n:sh" opt; do

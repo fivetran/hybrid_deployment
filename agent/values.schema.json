@@ -44,6 +44,13 @@
                 },
                 "minItems": 1
               },
+              "worker_resource_types": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              },
               "default": {
                 "type": "boolean"
               }
@@ -64,8 +71,9 @@
               }
             },
             "then": {
-              "required": [
-                "connectors"
+              "anyOf": [
+                {"required": ["connectors"]},
+                {"required": ["worker_resource_types"]}
               ]
             },
             "additionalProperties": false
