@@ -137,7 +137,7 @@ set_environment() {
 
     # Extract custom_dns from config file if present
     if [[ -f "$CONFIG_FILE" ]]; then
-        CUSTOM_DNS=$(grep -o '"custom_dns"[[:space:]]*:[[:space:]]*"[^"]*"' "$CONFIG_FILE" | sed 's/.*"custom_dns"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+        CUSTOM_DNS=$(grep -o '"custom_dns"[[:space:]]*:[[:space:]]*"[^"]*"' "$CONFIG_FILE" | head -1 | awk -F'"' '{print $4}')
     fi
 }
 
@@ -587,7 +587,7 @@ start_agent() {
 
     setup_kerberos_auth_if_enabled
 
-    DNS_ARGS=()
+    local DNS_ARGS=()
     if [[ -n "$CUSTOM_DNS" ]]; then
         DNS_ARGS=(--dns "$CUSTOM_DNS")
     fi
