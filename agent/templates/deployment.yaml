@@ -42,6 +42,17 @@ spec:
         {{- end }}
       {{- end }}
       restartPolicy: Always
+      {{- if .Values.config.custom_dns }}
+      dnsConfig:
+        nameservers:
+          {{- if kindIs "string" .Values.config.custom_dns }}
+          {{- range splitList "," .Values.config.custom_dns }}
+          - {{ trim . | quote }}
+          {{- end }}
+          {{- else }}
+          {{- toYaml .Values.config.custom_dns | nindent 10 }}
+          {{- end }}
+      {{- end }}
       containers:
         - name: hd-agent
           image: {{ if .Values.agent.image }}{{ .Values.agent.image }}{{ else }}{{ .Values.image }}{{ end }}

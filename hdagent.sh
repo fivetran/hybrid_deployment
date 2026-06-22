@@ -37,6 +37,7 @@ LOGDIR=$BASE_DIR/logs
 KERBEROS_KEYTAB_PATH=${KERBEROS_KEYTAB_PATH:-"$BASE_DIR/conf/krb5.keytab"}
 KERBEROS_KRB5_CONF_PATH=${KERBEROS_KRB5_CONF_PATH:-"$BASE_DIR/conf/krb5.conf"}
 KERBEROS_ENV_ARGS=()
+CUSTOM_DNS=""
 TOKEN=""
 CONTROLLER_ID=""
 SOCKET=""
@@ -132,6 +133,11 @@ set_environment() {
     if [[ $? -ne 0 ]]; then
         echo "Invalid controller-id format, please supply valid token"
         exit 1
+    fi
+
+    # Extract custom_dns from config file if present
+    if [[ -f "$CONFIG_FILE" ]]; then
+        CUSTOM_DNS=$(grep -o '"custom_dns"[[:space:]]*:[[:space:]]*"[^"]*"' "$CONFIG_FILE" | head -1 | awk -F'"' '{print $4}')
     fi
 }
 
@@ -581,6 +587,15 @@ start_agent() {
 
     setup_kerberos_auth_if_enabled
 
+    local DNS_ARGS=()
+    if [[ -n "$CUSTOM_DNS" ]]; then
+        IFS=',' read -ra _dns_list <<< "$CUSTOM_DNS"
+        for _dns_entry in "${_dns_list[@]}"; do
+            _dns_entry="${_dns_entry// /}"
+            [[ -n "$_dns_entry" ]] && DNS_ARGS+=(--dns "$_dns_entry")
+        done
+    fi
+
     # create and run the agent container in background
     $RUN_CMD run \
         -d \
@@ -597,6 +612,7 @@ start_agent() {
         --env HOST_USER_HOME_DIR=$HOME \
         --env CONTAINER_ENV_TYPE=$CONTAINER_ENV_TYPE \
         "${KERBEROS_ENV_ARGS[@]}" \
+        "${DNS_ARGS[@]}" \
         -v $BASE_DIR/conf:/conf \
         -v $BASE_DIR/logs:/logs \
         -v $SOCKET:$INTERNAL_SOCKET \
