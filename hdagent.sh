@@ -553,8 +553,8 @@ stop_workers() {
            echo "Container '$container_prefix' does not exist"
         else
            echo "Stopping container '$container_prefix' (ID: $CONTAINER_ID)"
-	   $RUN_CMD stop $CONTAINER_ID > /dev/null 2>&1
-	   $RUN_CMD rm $CONTAINER_ID > /dev/null 2>&1
+	   $RUN_CMD stop $CONTAINER_ID > /dev/null 2>&1 || true
+	   $RUN_CMD rm $CONTAINER_ID > /dev/null 2>&1 || true
         fi
     done
 }
@@ -567,8 +567,8 @@ stop_agent() {
     else
         $RUN_CMD ps -f name="^/?controller" -f label=fivetran=ldp --format "table {{.ID}}\t{{.Names}}\t{{.Status}}"
         echo "Stopping agent and cleaning up container"
-        $RUN_CMD stop $CONTAINER_ID > /dev/null 2>&1
-        $RUN_CMD rm $CONTAINER_ID > /dev/null 2>&1
+        $RUN_CMD stop $CONTAINER_ID > /dev/null 2>&1 || true
+        $RUN_CMD rm $CONTAINER_ID > /dev/null 2>&1 || true
     fi
 }
 
