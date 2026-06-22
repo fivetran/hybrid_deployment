@@ -589,7 +589,11 @@ start_agent() {
 
     local DNS_ARGS=()
     if [[ -n "$CUSTOM_DNS" ]]; then
-        DNS_ARGS=(--dns "$CUSTOM_DNS")
+        IFS=',' read -ra _dns_list <<< "$CUSTOM_DNS"
+        for _dns_entry in "${_dns_list[@]}"; do
+            _dns_entry="${_dns_entry// /}"
+            [[ -n "$_dns_entry" ]] && DNS_ARGS+=(--dns "$_dns_entry")
+        done
     fi
 
     # create and run the agent container in background
