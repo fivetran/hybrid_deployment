@@ -29,6 +29,10 @@
           "type": "string",
           "description": "Authentication token secret name to be reference for the agent"
         },
+        "extra_hosts": {
+          "type": "string",
+          "description": "Optional semicolon-separated host:ip overrides; renders pod hostAliases (IPv4)."
+        },
         "kubernetes_affinity": {
           "type": "array",
           "items": {
