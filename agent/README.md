@@ -181,6 +181,17 @@ helm upgrade --install hd-agent \
 
 > **Note:** JVM memory values support standard Java memory units (e.g., 800m, 1g, 2G). Ensure the JVM memory settings are appropriate for your container memory limits and that both values match for optimal performance.
 
+## Pinning hostnames (config.extra_hosts)
+
+`config.extra_hosts` pins hostnames to specific IPs on the agent pod (rendered as `hostAliases`). The format is a semicolon-separated list of `host:ip` pairs:
+
+```yaml
+config:
+  extra_hosts: "ldp.orchestrator.fivetran.com:35.188.225.82;api.fivetran.com:35.236.237.87"
+```
+
+> **Note:** The above is purely an example. Only set `extra_hosts` if requested by Fivetran Support, or if a DNS override is required.
+
 ## PodDisruptionBudgets
 
 By default, the chart creates PodDisruptionBudgets (PDBs) for both the agent (`hd-agent-pdb`) and the data processing jobs (`hd-job-pdb`), each with `minAvailable: 1`. If your environment does not require PDBs, you can disable them:

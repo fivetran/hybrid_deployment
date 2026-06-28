@@ -42,6 +42,24 @@ spec:
         {{- end }}
       {{- end }}
       restartPolicy: Always
+      {{- if .Values.config.extra_hosts }}
+      hostAliases:
+        {{- range splitList ";" .Values.config.extra_hosts }}
+        {{- $entry := trim . }}
+        {{- if $entry }}
+        {{- $parts := splitList ":" $entry }}
+        {{- if eq (len $parts) 2 }}
+        {{- $host := trim (index $parts 0) }}
+        {{- $ip := trim (index $parts 1) }}
+        {{- if and $host $ip }}
+        - ip: {{ $ip | quote }}
+          hostnames:
+            - {{ $host | quote }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
+      {{- end }}
       {{- if .Values.config.custom_dns }}
       dnsConfig:
         nameservers:
