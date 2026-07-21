@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/name: hd-agent-pdb
     {{- include "hd.labels" . | nindent 4 }}
 spec:
-  minAvailable: 1
+  maxUnavailable: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: hd-agent
@@ -24,7 +24,7 @@ metadata:
     app.kubernetes.io/name: hd-job-pdb
     {{- include "hd.labels" . | nindent 4 }}
 spec:
-  minAvailable: 1
+  maxUnavailable: 1
   selector:
     matchLabels:
       app.kubernetes.io/part-of: hybrid-deployment
