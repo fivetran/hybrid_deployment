@@ -532,7 +532,8 @@ status_agent() {
 
 get_container_id() {
     local container_prefix=$1
-    container_id=$($RUN_CMD ps -a -q -f name="^/${container_prefix}")
+    local container_id
+    container_id=$($RUN_CMD ps -a -q -f name="^/?${container_prefix}")
     if [[ -z "$container_id" ]]; then
         echo "NOT_FOUND"
     else
@@ -542,15 +543,28 @@ get_container_id() {
 
 stop_workers() {
     for container_prefix in "hd-base-activity-worker" "hd-workflow-worker"; do
-        CONTAINER_ID=$(get_container_id "$container_prefix")
-        if [[ "$CONTAINER_ID" == "NOT_FOUND" ]]; then
-           echo "Container '$container_prefix' does not exist"
+        local ids
+        ids=$(get_container_id "$container_prefix")
+        if [[ "$ids" == "NOT_FOUND" ]]; then
+            echo "No containers matching '$container_prefix' found"
         else
-           echo "Stopping container '$container_prefix' (ID: $CONTAINER_ID)"
-	   $RUN_CMD stop $CONTAINER_ID > /dev/null 2>&1
-	   $RUN_CMD rm $CONTAINER_ID > /dev/null 2>&1
+            while IFS= read -r cid; do
+                echo "Removing worker container '$container_prefix' (ID: $cid)"
+                $RUN_CMD rm --force "$cid" > /dev/null 2>&1 || true
+            done <<< "$ids"
         fi
     done
+
+    # Catch-all: remove any remaining containers bearing the fivetran=ldp label
+    # (covers dynamically-spawned connector workers beyond the known prefixes above)
+    local remaining
+    remaining=$($RUN_CMD ps -a -q -f label=fivetran=ldp 2>/dev/null || true)
+    if [[ -n "$remaining" ]]; then
+        echo "Removing remaining fivetran-labeled containers..."
+        while IFS= read -r cid; do
+            $RUN_CMD rm --force "$cid" > /dev/null 2>&1 || true
+        done <<< "$remaining"
+    fi
 }
 
 stop_agent() {

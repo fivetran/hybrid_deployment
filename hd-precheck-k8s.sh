@@ -22,6 +22,8 @@ NAMESPACE="default"
 TEST_POD_NAME="hd-test-$$-pod"
 # For slower networks or clusters, you may want to increase the timeout
 TIMEOUT=60
+CLOCK_SKEW_WARNING_THRESHOLD_SECONDS=30
+CLOCK_SKEW_REFERENCE_URL="https://ldp.orchestrator.fivetran.com"
 DISABLE_CONNECTIVITY_CHECKS=""
 # Key endpoints to verify connectivity
 ENDPOINTS=(
@@ -134,10 +136,32 @@ function list_kubectl_current_context(){
 
 function add_curl_to_pod() {
     # Add curl to the utility pod if not already present
+    if kubectl exec --namespace="$NAMESPACE" "$TEST_POD_NAME" -- bash -c "command -v curl >/dev/null 2>&1" > /dev/null 2>&1; then
+        return 0
+    fi
+
     if kubectl exec --namespace="$NAMESPACE" "$TEST_POD_NAME" -- bash -c "apt update && apt install -y curl" > /dev/null 2>&1; then
         return 0
     else
         return 1
+    fi
+}
+
+function check_clock_skew() {
+    local server_date server_epoch local_epoch abs_skew
+
+    server_date=$(kubectl exec --namespace="$NAMESPACE" "$TEST_POD_NAME" -- bash -c \
+        "curl -sSI --max-time 5 '$CLOCK_SKEW_REFERENCE_URL' 2>/dev/null | awk 'tolower(\$0) ~ /^date:/ { sub(/\r$/, \"\", \$0); print substr(\$0, 7); exit }'" 2>/dev/null || true)
+    server_epoch=$(date -u -d "$server_date" +%s 2>/dev/null || true)
+    local_epoch=$(kubectl exec --namespace="$NAMESPACE" "$TEST_POD_NAME" -- date -u +%s 2>/dev/null || true)
+    [[ -n "$server_date" && -n "$server_epoch" && -n "$local_epoch" ]] || {
+        echo "Warning: Unable to determine local system time, skipping clock skew check"
+        return
+    }
+
+    abs_skew=$(( local_epoch > server_epoch ? local_epoch - server_epoch : server_epoch - local_epoch ))
+    if (( abs_skew > CLOCK_SKEW_WARNING_THRESHOLD_SECONDS )); then
+        echo "Warning: System clock differs from the reference time by ${abs_skew}s. Clock skew can cause some connector syncs to fail. Verify NTP synchronization before running setup tests"
     fi
 }
 
@@ -177,14 +201,15 @@ function verify_pod_running() {
                 echo -e "Pod events:\n----"
                 kubectl get events --field-selector involvedObject.name="$TEST_POD_NAME" -n "$NAMESPACE" -o custom-columns=Message:.message --no-headers
                 echo -e "----\n"
-                if [ -z "$DISABLE_CONNECTIVITY_CHECKS" ]; then
-                    if add_curl_to_pod; then
+                if add_curl_to_pod; then
+                    check_clock_skew
+                    if [ -z "$DISABLE_CONNECTIVITY_CHECKS" ]; then
                         echo "Testing connectivity to key endpoints from the pod: "
                         verify_key_endpoints
                         echo -e "\nConnectivity check completed.\n"
-                    else
-                        echo "Failed to install curl in the test pod. Please check your Kubernetes cluster and permissions"
                     fi
+                else
+                    echo "Failed to install curl in the test pod. Please check your Kubernetes cluster and permissions"
                 fi
                 kubectl delete pod "$TEST_POD_NAME" -n "$NAMESPACE" --wait=false
                 return 0
