@@ -1,0 +1,23 @@
+hdagent.sh
+  f6059c3104e18900 140,590
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.1",
+  "base_commit_sha": "84d9675ccf3a9ace05b3b4453edcbdf785ab67ea",
+  "prompts": {
+    "f6059c3104e18900": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3befffc1-6737-4fb3-b78e-3da9d0ae5942",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "unknown",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}

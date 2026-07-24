@@ -1,0 +1,25 @@
+agent/templates/deployment.yaml
+  c28248a513ba870f 45-55
+hdagent.sh
+  c28248a513ba870f 592-596
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.1",
+  "base_commit_sha": "f400d90cd17919852664d68179d70778f398988a",
+  "prompts": {
+    "c28248a513ba870f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a46b363-d9bf-4192-8206-01325c79e0fc",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "unknown",
+      "messages": [],
+      "total_additions": 18,
+      "total_deletions": 3,
+      "accepted_lines": 16,
+      "overriden_lines": 0
+    }
+  }
+}
