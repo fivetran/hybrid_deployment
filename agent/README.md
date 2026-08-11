@@ -43,7 +43,7 @@ helm upgrade --install hd-agent \
  --set config.data_volume_pvc=YOUR_PERSISTENT_VOLUME_CLAIM \
  --set config.token="YOUR_TOKEN_HERE" \
  --set config.namespace=fivetran \
- --version 0.25.0
+ --version 0.26.0
  ```
 
 > Notes:
@@ -70,7 +70,7 @@ helm upgrade --install hd-agent \
  -f values.yaml \
  --create-namespace \
  --namespace fivetran \
- --version 0.25.0
+ --version 0.26.0
 ```
 
 Example values file:
@@ -135,6 +135,8 @@ agent:
 helm uninstall hd-agent
 ```
 
+This also cleans up the `hd-agent-secret` Kubernetes Secret (the agent's mTLS credentials) via a `pre-delete` hook, since it's created imperatively at enrollment time and isn't otherwise tracked by Helm.
+
 <br>
 
 # Agent and Job Resource Usage
@@ -176,7 +178,7 @@ helm upgrade --install hd-agent \
  --set agent.jvm_xmx=1024m \
  --create-namespace \
  --namespace fivetran \
- --version 0.25.0
+ --version 0.26.0
 ```
 
 > **Note:** JVM memory values support standard Java memory units (e.g., 800m, 1g, 2G). Ensure the JVM memory settings are appropriate for your container memory limits and that both values match for optimal performance.
