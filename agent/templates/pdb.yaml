@@ -24,7 +24,7 @@ metadata:
     app.kubernetes.io/name: hd-job-pdb
     {{- include "hd.labels" . | nindent 4 }}
 spec:
-  maxUnavailable: 1
+  minAvailable: 1
   selector:
     matchLabels:
       app.kubernetes.io/part-of: hybrid-deployment

@@ -196,7 +196,7 @@ config:
 
 ## PodDisruptionBudgets
 
-By default, the chart creates PodDisruptionBudgets (PDBs) for both the agent (`hd-agent-pdb`) and the data processing jobs (`hd-job-pdb`), each with `maxUnavailable: 1`. If your environment does not require PDBs, you can disable them:
+By default, the chart creates PodDisruptionBudgets (PDBs) for both the agent (`hd-agent-pdb`, `maxUnavailable: 1`) and the data processing jobs (`hd-job-pdb`, `minAvailable: 1`). The job PDB uses `minAvailable` because its pods are owned by Jobs, which have no `scale` subresource; `maxUnavailable` is not valid for such pods. If your environment does not require PDBs, you can disable them:
 
 ```yaml
 pdb:
