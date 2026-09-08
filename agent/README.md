@@ -43,7 +43,7 @@ helm upgrade --install hd-agent \
  --set config.data_volume_pvc=YOUR_PERSISTENT_VOLUME_CLAIM \
  --set config.token="YOUR_TOKEN_HERE" \
  --set config.namespace=fivetran \
- --version 0.26.0
+ --version 0.26.1
  ```
 
 > Notes:
@@ -70,7 +70,7 @@ helm upgrade --install hd-agent \
  -f values.yaml \
  --create-namespace \
  --namespace fivetran \
- --version 0.26.0
+ --version 0.26.1
 ```
 
 Example values file:
@@ -178,7 +178,7 @@ helm upgrade --install hd-agent \
  --set agent.jvm_xmx=1024m \
  --create-namespace \
  --namespace fivetran \
- --version 0.26.0
+ --version 0.26.1
 ```
 
 > **Note:** JVM memory values support standard Java memory units (e.g., 800m, 1g, 2G). Ensure the JVM memory settings are appropriate for your container memory limits and that both values match for optimal performance.
