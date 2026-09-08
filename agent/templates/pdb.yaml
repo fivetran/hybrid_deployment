@@ -24,7 +24,12 @@ metadata:
     app.kubernetes.io/name: hd-job-pdb
     {{- include "hd.labels" . | nindent 4 }}
 spec:
-  maxUnavailable: 1
+  # hd-job pods are owned by Jobs, which do not implement a scale subresource.
+  # maxUnavailable requires the owning controller's scale to compute the intended
+  # pod count, so it produces a permanent "SyncFailed" condition here. Only integer
+  # minAvailable is valid for pods without a scale subresource.
+  # https://kubernetes.io/docs/tasks/run-application/configure-pdb/#arbitrary-controllers-and-selectors
+  minAvailable: 1
   selector:
     matchLabels:
       app.kubernetes.io/part-of: hybrid-deployment
