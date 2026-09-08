@@ -1,9 +1,11 @@
 agent/README.md
   s_efa1db0bb14a26::t_6e311c8aaf53bb 199
+agent/templates/pdb.yaml
+  s_efa1db0bb14a26::t_b18005c9968386 27
 ---
 {
   "schema_version": "authorship/3.0.0",
-  "git_ai_version": "1.1.4",
+  "git_ai_version": "1.7.2",
   "base_commit_sha": "12ca984aa44b22be0e1d2ce069e7d4fee0fbc144",
   "prompts": {
     "efa1db0bb14a2603": {
@@ -13,11 +15,20 @@ agent/README.md
         "model": "claude-sonnet-5"
       },
       "human_author": "Victor Pechorin <victor.pechorin@fivetran.com>",
-      "messages": [],
       "total_additions": 1,
       "total_deletions": 1,
       "accepted_lines": 0,
       "overriden_lines": 0
+    }
+  },
+  "sessions": {
+    "s_efa1db0bb14a26": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "80d47fa0-8dfb-4d67-92fc-77503fb17b6b",
+        "model": "unknown"
+      },
+      "human_author": "Victor Pechorin <victor.pechorin@fivetran.com>"
     }
   }
 }
