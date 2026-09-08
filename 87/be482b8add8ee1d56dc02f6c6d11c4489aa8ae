@@ -1,0 +1,26 @@
+agent/Chart.yaml
+  s_5e076308eae829::t_4ffac13e3f63b4 6-7
+README.md
+  s_5e076308eae829::t_6a70871366b4f1 222
+agent/README.md
+  s_5e076308eae829::t_6a70871366b4f1 46,73,181
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "87be482b8add8ee1d56dc02f6c6d11c4489aa8ae",
+  "prompts": {
+    "5e076308eae8296c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3e8649d2-0543-425f-aefa-7e039a7c16f6",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Victor Pechorin <victor.pechorin@fivetran.com>",
+      "total_additions": 6,
+      "total_deletions": 6,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  }
+}
