@@ -1,0 +1,23 @@
+agent/Chart.yaml
+  s_01648beb819b8b::t_83c572a216776d 6-7
+agent/README.md
+  s_01648beb819b8b::t_a868cded1aa7bb 46,73,181,199
+agent/templates/pdb.yaml
+  s_01648beb819b8b::t_b233dd04177a94 11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "be5196fd38e240be67ffdb0ecd15b3e6f4946a0c",
+  "prompts": {},
+  "sessions": {
+    "s_01648beb819b8b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6108c918-657e-4618-8d6c-3faae29b8db7",
+        "model": "unknown"
+      },
+      "human_author": "Victor Pechorin <victor.pechorin@fivetran.com>"
+    }
+  }
+}
