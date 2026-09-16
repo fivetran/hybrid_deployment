@@ -74,6 +74,34 @@ CONTEXT=""
 SERVICE_CONFIG=""
 EXCLUDE_ENV="false"
 
+# Names that are safe to keep in the support bundle. Every other key in a
+# container's "Env" array has its value masked. Default-deny: hdagent.sh passes
+# the base64-encoded Kerberos keytab and krb5.conf as container env vars
+# (kerberos_keytab, kerberos_krb5_conf), and a name-based deny-list can't know
+# every secret name in advance.
+CONTAINER_ENV_ALLOWLIST='^(HOST_USER_HOME_DIR|CONTAINER_ENV_TYPE|HOSTNAME|HOME|PATH|LANG|LC_ALL|TZ|TERM|PWD|SHLVL|JAVA_HOME|container|enable_kerberos_auth|kerberos_principal)$'
+
+# redact_inspect <raw_inspect_json_file> <output_file>
+# Masks the value of every non-allow-listed "KEY=value" entry in the "Env"
+# array of a `docker/podman inspect` JSON file, keeping the key name visible.
+function redact_inspect() {
+    awk -v allow="$CONTAINER_ENV_ALLOWLIST" '
+        /"Env":[[:space:]]*\[/ { in_env=1; print; next }
+        in_env && /^[[:space:]]*\]/ { in_env=0; print; next }
+        in_env {
+            if (match($0, /"[^"=]+=/)) {
+                key = substr($0, RSTART+1, RLENGTH-2)
+                if (key ~ allow) { print; next }
+                indent = $0; sub(/[^ \t].*$/, "", indent)
+                comma = ($0 ~ /,[[:space:]]*$/) ? "," : ""
+                printf "%s\"%s=<redacted>\"%s\n", indent, key, comma
+                next
+            }
+            print; next
+        }
+        { print }
+    ' "$1" > "$2"
+}
 
 function get_token_from_config() {
     # Extract the token from the config file, if it exists
@@ -194,7 +222,7 @@ function log_container_info() {
             echo "HD agent container(s) found: $CONTROLLER_NAMES" >&2
             docker logs $CONTROLLER_NAMES > "$STATS_DIR/docker_controller.log" 2>&1
             docker inspect $CONTROLLER_NAMES > "$STATS_DIR/docker_controller_inspect.log" 2>&1
-            sed -E '/"TOKEN=.*"/d; /"*.client_private_key=.*"/d; /"*.client_cert=.*"/d; /"*.clientCert=.*"/d' "$STATS_DIR/docker_controller_inspect.log" > "$STATS_DIR/docker_agent_inspect.log"
+            redact_inspect "$STATS_DIR/docker_controller_inspect.log" "$STATS_DIR/docker_agent_inspect.log"
             rm $STATS_DIR/docker_controller_inspect.log
         else
             echo "No HD agent container found (tried 'controller' and 'fivetran' name filters)." > "$STATS_DIR/docker_controller.log"
@@ -231,7 +259,7 @@ function log_container_info() {
             echo "HD agent container(s) found: $CONTROLLER_NAMES" >&2
             podman logs $CONTROLLER_NAMES > "$STATS_DIR/podman_controller.log" 2>&1
             podman inspect $CONTROLLER_NAMES > "$STATS_DIR/podman_controller_inspect.log" 2>&1
-            sed -E '/"TOKEN=.*"/d; /"*.client_private_key=.*"/d; /"*.client_cert=.*"/d; /"*.clientCert=.*"/d' "$STATS_DIR/podman_controller_inspect.log" > "$STATS_DIR/podman_agent_inspect.log"
+            redact_inspect "$STATS_DIR/podman_controller_inspect.log" "$STATS_DIR/podman_agent_inspect.log"
             rm $STATS_DIR/podman_controller_inspect.log
         else
             echo "No HD agent container found (tried 'controller' and 'fivetran' name filters)." > "$STATS_DIR/podman_controller.log"
