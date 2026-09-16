@@ -10,8 +10,10 @@
 #  - Output will be saved in the stats sub directory.
 #
 #  Important Notice:
-#   - This will log the user ENVIRONMENT (env).  
-#   - If any sensitive information is in the environment variables, please exclude this check use the "-x env" option.
+#   - This will log the user ENVIRONMENT (env).
+#   - Variable names are always logged, but only a small allow-list of known-safe
+#     variables (see ENV_ALLOWLIST_REGEX) have their values logged; all others are redacted.
+#   - To exclude the environment entirely, use the "-x env" option.
 #
 #  usage: ./hd-debug.sh [-r docker|podman]
 #
@@ -335,8 +337,15 @@ function log_user () {
     groups > "$STATS_DIR/current_user_groups.log" 2>&1
 }
 
+ENV_ALLOWLIST_REGEX='^(HOME|USER|LOGNAME|SHELL|LANG|LANGUAGE|LC_[A-Z]+|PATH|PWD|OLDPWD|TERM|COLORTERM|HOSTNAME|HOSTTYPE|MACHTYPE|OSTYPE|SHLVL|TZ|TMPDIR)$'
+
 function log_env () {
-    env | sort > "$STATS_DIR/current_user_env.log" 2>&1
+    # Log variable names for every env var, but only log the value for names on the allow list.
+    env | sort | awk -F'=' -v allow="$ENV_ALLOWLIST_REGEX" '
+        { name = $1 }
+        name ~ allow { print; next }
+        { print name "=<redacted>" }
+    ' > "$STATS_DIR/current_user_env.log" 2>&1
 }
 
 function log_selinux() {
