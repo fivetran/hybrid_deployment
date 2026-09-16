@@ -1,0 +1,23 @@
+hd-debug.sh
+  97c1b9411c638cc6 367
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "a80cc5d0bf5b68ddbbc2a5f99c774b8a00b6cfc9",
+  "prompts": {
+    "97c1b9411c638cc6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4180d142-9db5-4e11-9c56-080095aa9bc4",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Nikhil Wadhwa <44419564+nikhilwadhwa84@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 10,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
