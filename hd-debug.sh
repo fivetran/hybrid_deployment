@@ -11,9 +11,9 @@
 #
 #  Important Notice:
 #   - This will log the user ENVIRONMENT (env).
-#   - Variable names are always logged, but only a small allow-list of known-safe
-#     variables (see ENV_ALLOWLIST_REGEX) have their values logged; all others are redacted.
-#   - To exclude the environment entirely, use the "-x env" option.
+#   - Values of Kerberos keytab-related variables (name containing "keytab" or "ktname",
+#     e.g. KRB5_KTNAME) are redacted; all other variables are logged as before.
+#   - If any other sensitive information is in the environment variables, please exclude this check use the "-x env" option.
 #
 #  usage: ./hd-debug.sh [-r docker|podman]
 #
@@ -337,14 +337,13 @@ function log_user () {
     groups > "$STATS_DIR/current_user_groups.log" 2>&1
 }
 
-ENV_ALLOWLIST_REGEX='^(HOME|USER|LOGNAME|SHELL|LANG|LANGUAGE|LC_[A-Z]+|PATH|PWD|OLDPWD|TERM|COLORTERM|HOSTNAME|HOSTTYPE|MACHTYPE|OSTYPE|SHLVL|TZ|TMPDIR)$'
-
 function log_env () {
-    # Log variable names for every env var, but only log the value for names on the allow list.
-    env | sort | awk -F'=' -v allow="$ENV_ALLOWLIST_REGEX" '
+    # Log all env vars, but redact the value of any Kerberos-related variable
+    # (e.g. KRB5_KTNAME, which can point at or embed a keytab). Names are still logged.
+    env | sort | awk -F'=' '
         { name = $1 }
-        name ~ allow { print; next }
-        { print name "=<redacted>" }
+        tolower(name) ~ /keytab|ktname/ { print name "=<redacted>"; next }
+        { print }
     ' > "$STATS_DIR/current_user_env.log" 2>&1
 }
 
