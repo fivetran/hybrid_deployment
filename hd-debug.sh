@@ -11,8 +11,8 @@
 #
 #  Important Notice:
 #   - This will log the user ENVIRONMENT (env).
-#   - Values of Kerberos keytab-related variables (name containing "keytab" or "ktname",
-#     e.g. KRB5_KTNAME) are redacted; all other variables are logged as before.
+#   - Values of keytab-related variables (name containing "keytab" or "ktname", e.g.
+#     KRB5_KTNAME) are redacted; all other variables are logged as before.
 #   - If any other sensitive information is in the environment variables, please exclude this check use the "-x env" option.
 #
 #  usage: ./hd-debug.sh [-r docker|podman]
@@ -77,8 +77,8 @@ EXCLUDE_ENV="false"
 # Names that are safe to keep in the support bundle. Every other key in a
 # container's "Env" array has its value masked. Default-deny: the previous
 # name-based deny-list (TOKEN, client_private_key, client_cert, clientCert)
-# missed the Kerberos keytab and krb5.conf env vars (GA-1037344), and a
-# deny-list can't know every secret name in advance.
+# missed the Kerberos keytab and krb5.conf env vars (GA-1037344, RD-1276537),
+# and a deny-list can't know every secret name in advance.
 CONTAINER_ENV_ALLOWLIST='^(HOST_USER_HOME_DIR|CONTAINER_ENV_TYPE|HOSTNAME|HOME|PATH|LANG|LC_ALL|TZ|TERM|PWD|SHLVL|JAVA_HOME|container)$'
 
 # redact_inspect <raw_inspect_json_file> <output_file>
@@ -366,7 +366,7 @@ function log_user () {
 }
 
 function log_env () {
-    # Log all env vars, but redact the value of any Kerberos-related variable
+    # Log all env vars, but redact the value of any keytab-related variable
     # (e.g. KRB5_KTNAME, which can point at or embed a keytab). Names are still logged.
     env | sort | awk -F'=' '
         { name = $1 }
