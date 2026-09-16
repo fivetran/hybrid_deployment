@@ -75,11 +75,11 @@ SERVICE_CONFIG=""
 EXCLUDE_ENV="false"
 
 # Names that are safe to keep in the support bundle. Every other key in a
-# container's "Env" array has its value masked. Default-deny: hdagent.sh passes
-# the base64-encoded Kerberos keytab and krb5.conf as container env vars
-# (kerberos_keytab, kerberos_krb5_conf), and a name-based deny-list can't know
-# every secret name in advance.
-CONTAINER_ENV_ALLOWLIST='^(HOST_USER_HOME_DIR|CONTAINER_ENV_TYPE|HOSTNAME|HOME|PATH|LANG|LC_ALL|TZ|TERM|PWD|SHLVL|JAVA_HOME|container|enable_kerberos_auth|kerberos_principal)$'
+# container's "Env" array has its value masked. Default-deny: the previous
+# name-based deny-list (TOKEN, client_private_key, client_cert, clientCert)
+# missed the Kerberos keytab and krb5.conf env vars (GA-1037344), and a
+# deny-list can't know every secret name in advance.
+CONTAINER_ENV_ALLOWLIST='^(HOST_USER_HOME_DIR|CONTAINER_ENV_TYPE|HOSTNAME|HOME|PATH|LANG|LC_ALL|TZ|TERM|PWD|SHLVL|JAVA_HOME|container)$'
 
 # redact_inspect <raw_inspect_json_file> <output_file>
 # Masks the value of every non-allow-listed "KEY=value" entry in the "Env"
