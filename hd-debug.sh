@@ -11,9 +11,7 @@
 #
 #  Important Notice:
 #   - This will log the user ENVIRONMENT (env).
-#   - Values of keytab-related variables (name containing "keytab" or "ktname", e.g.
-#     KRB5_KTNAME) are redacted; all other variables are logged as before.
-#   - If any other sensitive information is in the environment variables, please exclude this check use the "-x env" option.
+#   - If any sensitive information is in the environment variables, please exclude this check use the "-x env" option.
 #
 #  usage: ./hd-debug.sh [-r docker|podman]
 #
@@ -366,13 +364,7 @@ function log_user () {
 }
 
 function log_env () {
-    # Log all env vars, but redact the value of any keytab-related variable
-    # (e.g. KRB5_KTNAME, which can point at or embed a keytab). Names are still logged.
-    env | sort | awk -F'=' '
-        { name = $1 }
-        tolower(name) ~ /keytab|ktname/ { print name "=<redacted>"; next }
-        { print }
-    ' > "$STATS_DIR/current_user_env.log" 2>&1
+    env | sort > "$STATS_DIR/current_user_env.log" 2>&1
 }
 
 function log_selinux() {
