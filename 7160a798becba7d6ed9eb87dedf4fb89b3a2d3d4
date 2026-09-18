@@ -1,0 +1,21 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "7160a798becba7d6ed9eb87dedf4fb89b3a2d3d4",
+  "prompts": {
+    "97c1b9411c638cc6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4180d142-9db5-4e11-9c56-080095aa9bc4",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Nikhil Wadhwa <44419564+nikhilwadhwa84@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 59,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  }
+}
