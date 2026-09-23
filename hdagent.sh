@@ -606,7 +606,7 @@ start_agent() {
 
 restart_existing_agent_if_needed() {
     # Check if a "controller" container exists (stopped or exited)
-    CONTAINER_ID=$(find_agent_container "^/^controller.*$")
+    CONTAINER_ID=$(find_agent_container "^/?controller.*$")
 
     if [[ -n "$CONTAINER_ID" ]]; then
         STATUS=$($RUN_CMD inspect --format '{{.State.Status}}' $CONTAINER_ID)
