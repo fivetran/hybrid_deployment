@@ -572,9 +572,9 @@ start_agent() {
         # new labels
         --label "$ORGANIZATION"
         --label "$PRODUCT"
-        --label "process_id=$CONTROLLER_PROCESS_ID"
-        --label "controller_id=$CONTROLLER_ID"
-        --label "container_type=$CONTROLLER_CONTAINER_TYPE"
+        --label "processId=$CONTROLLER_PROCESS_ID"
+        --label "controllerId=$CONTROLLER_ID"
+        --label "containerType=$CONTROLLER_CONTAINER_TYPE"
         # legacy labels (DEPRECATED)
         --label "$LEGACY_PRODUCT"
         --label "ldp_process_id=$CONTROLLER_PROCESS_ID"
