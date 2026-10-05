@@ -7,11 +7,10 @@ metadata:
   labels:
     {{- include "hd.labels" (dict "Values" .Values "name" "hd-job-sa") | nindent 4 }}
   annotations:
-    {{- $annotations := deepCopy (.Values.config.sa_annotations | default dict) }}
+    {{- include "hd.annotations" (dict "Values" .Values "annotations" .Values.config.sa_annotations) | nindent 4 }}
     {{- with .Values.config.azure_workload_identity_client_id }}
-    {{- $_ := set $annotations "azure.workload.identity/client-id" (toString .) }}
+    azure.workload.identity/client-id: {{ . | quote }}
     {{- end }}
-    {{- include "hd.annotations" (dict "Values" .Values "annotations" $annotations) | nindent 4 }}
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
