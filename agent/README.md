@@ -194,23 +194,6 @@ config:
 
 > **Note:** The above is purely an example. Only set `extra_hosts` if requested by Fivetran Support, or if a DNS override is required.
 
-## Azure Workload Identity (AKS)
-
-On Azure Kubernetes Service (AKS), the agent and its jobs can authenticate to Azure, for example to read secrets from Azure Key Vault, with [Microsoft Entra Workload ID](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview). Set `config.azure_workload_identity_client_id` to the Client ID of a user-assigned managed identity:
-
-```yaml
-config:
-  azure_workload_identity_client_id: "00000000-0000-0000-0000-000000000000"
-```
-
-When set, the chart annotates the `hd-agent-sa` and `hd-job-sa` service accounts with `azure.workload.identity/client-id` (merged with `config.sa_annotations`) and labels the agent pod with `azure.workload.identity/use: "true"`. The agent applies the same label to the pods it creates.
-
-Prerequisites:
-
-* The AKS cluster has the OIDC issuer and Workload Identity enabled.
-* The managed identity has a federated credential for the cluster's OIDC issuer URL with subject `system:serviceaccount:<release-namespace>:hd-job-sa` and audience `api://AzureADTokenExchange`.
-* The managed identity has the roles it needs on the target resources, for example **Key Vault Secrets User** on the Key Vault.
-
 ## PodDisruptionBudgets
 
 By default, the chart creates PodDisruptionBudgets (PDBs) for both the agent (`hd-agent-pdb`, `minAvailable: 1`) and the data processing jobs (`hd-job-pdb`, `minAvailable: 1`). If your environment does not require PDBs, you can disable them:

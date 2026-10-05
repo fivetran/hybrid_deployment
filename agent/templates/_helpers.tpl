@@ -30,11 +30,3 @@
 {{- toYaml $extra }}
 {{- end }}
 {{- end }}
-
-{{- define "hd.saAnnotations" -}}
-{{- $ann := deepCopy (.Values.config.sa_annotations | default dict) }}
-{{- with .Values.config.azure_workload_identity_client_id }}
-{{- $_ := set $ann "azure.workload.identity/client-id" (toString .) }}
-{{- end }}
-{{- include "hd.annotations" (dict "annotations" $ann) }}
-{{- end }}
