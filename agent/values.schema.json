@@ -29,6 +29,11 @@
           "type": "string",
           "description": "Authentication token secret name to be reference for the agent"
         },
+        "azure_workload_identity_client_id": {
+          "type": "string",
+          "pattern": "^$|^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "description": "Optional. Client ID of the user-assigned managed identity to use with Microsoft Entra Workload ID on AKS. Annotates hd-agent-sa and hd-job-sa with azure.workload.identity/client-id and labels the agent pod with azure.workload.identity/use."
+        },
         "extra_hosts": {
           "type": "string",
           "description": "Optional semicolon-separated host:ip overrides; renders pod hostAliases (IPv4)."

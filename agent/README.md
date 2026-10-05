@@ -43,7 +43,7 @@ helm upgrade --install hd-agent \
  --set config.data_volume_pvc=YOUR_PERSISTENT_VOLUME_CLAIM \
  --set config.token="YOUR_TOKEN_HERE" \
  --set config.namespace=fivetran \
- --version 0.27.0
+ --version 0.28.0
  ```
 
 > Notes:
@@ -70,7 +70,7 @@ helm upgrade --install hd-agent \
  -f values.yaml \
  --create-namespace \
  --namespace fivetran \
- --version 0.27.0
+ --version 0.28.0
 ```
 
 Example values file:
@@ -178,7 +178,7 @@ helm upgrade --install hd-agent \
  --set agent.jvm_xmx=1024m \
  --create-namespace \
  --namespace fivetran \
- --version 0.27.0
+ --version 0.28.0
 ```
 
 > **Note:** JVM memory values support standard Java memory units (e.g., 800m, 1g, 2G). Ensure the JVM memory settings are appropriate for your container memory limits and that both values match for optimal performance.
@@ -193,6 +193,23 @@ config:
 ```
 
 > **Note:** The above is purely an example. Only set `extra_hosts` if requested by Fivetran Support, or if a DNS override is required.
+
+## Azure Workload Identity (AKS)
+
+On Azure Kubernetes Service (AKS), the agent and its jobs can authenticate to Azure, for example to read secrets from Azure Key Vault, with [Microsoft Entra Workload ID](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview). Set `config.azure_workload_identity_client_id` to the Client ID of a user-assigned managed identity:
+
+```yaml
+config:
+  azure_workload_identity_client_id: "00000000-0000-0000-0000-000000000000"
+```
+
+When set, the chart annotates the `hd-agent-sa` and `hd-job-sa` service accounts with `azure.workload.identity/client-id` (merged with `config.sa_annotations`) and labels the agent pod with `azure.workload.identity/use: "true"`. The agent applies the same label to the pods it creates.
+
+Prerequisites:
+
+* The AKS cluster has the OIDC issuer and Workload Identity enabled.
+* The managed identity has a federated credential for the cluster's OIDC issuer URL with subject `system:serviceaccount:<release-namespace>:hd-job-sa` and audience `api://AzureADTokenExchange`.
+* The managed identity has the roles it needs on the target resources, for example **Key Vault Secrets User** on the Key Vault.
 
 ## PodDisruptionBudgets
 

@@ -20,6 +20,9 @@ spec:
       labels:
         app.kubernetes.io/name: hd-agent
         {{- include "hd.labels" . | nindent 8 }}
+        {{- if .Values.config.azure_workload_identity_client_id }}
+        azure.workload.identity/use: "true"
+        {{- end }}
       annotations:
         helm.fivetran.com/chart-version: "{{ .Chart.Version }}"
         {{- include "hd.annotations" (dict "Values" .Values "annotations" (or .Values.agent.annotations .Values.config.deployment_annotations)) | nindent 8 }}
