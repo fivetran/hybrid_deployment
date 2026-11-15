@@ -1,0 +1,20 @@
+hdagent.sh
+  s_353dde4b9c48a9::t_ac853e4a2d0e0d 33-35,74-76,78,82-93,146-147
+  s_353dde4b9c48a9::t_d7e95a22e3b233 148
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b0c755e323deac19ba64a241d4571bc6637de64c",
+  "prompts": {},
+  "sessions": {
+    "s_353dde4b9c48a9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d01c735e-0c51-4f49-9cb7-8de0b01fddaf",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Victor Pechorin <victor.pechorin@fivetran.com>"
+    }
+  }
+}
