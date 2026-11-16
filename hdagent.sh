@@ -30,7 +30,10 @@ CLOCK_SKEW_REFERENCE_URL="https://ldp.orchestrator.fivetran.com"
 BASE_DIR=$(pwd)
 SCRIPT_PATH="$(realpath "$0")"
 CONFIG_FILE=conf/config.json
-AGENT_IMAGE="us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/ldp-agent:production"
+DEFAULT_CONTROLLER_IMAGE="us-docker.pkg.dev/prod-eng-fivetran-ldp/public-docker-us/ldp-agent"
+DEFAULT_CONTROLLER_IMAGE_TAG="production"
+AGENT_IMAGE=""
+PULL_POLICY=""
 SCRIPT_URL="https://raw.githubusercontent.com/fivetran/hybrid_deployment/main/hdagent.sh"
 CONTAINER_NETWORK="fivetran_ldp"
 # Container labels. New labels are the standard; legacy labels are applied in
@@ -69,9 +72,35 @@ log_hdagent_out() {
     echo "$(date -u +'%Y-%m-%d %H:%M:%S') UTC - $1" >> "$LOGDIR/hdagent.log"
 }
 
-get_token_from_config() {
+get_value_from_config() {
+    # Read a string or scalar (e.g. boolean) value of a top level property from the config file
+    local key="$1"
     if [[ -f "$CONFIG_FILE" ]]; then
-        grep -o '"token": *"[^"]*"' "$CONFIG_FILE" | sed 's/.*"token": *"\([^"]*\)".*/\1/'
+        grep -o -E "\"$key\"[[:space:]]*:[[:space:]]*(\"[^\"]*\"|[^\",}[:space:]]+)" "$CONFIG_FILE" | head -n 1 \
+            | sed -E "s/^\"$key\"[[:space:]]*:[[:space:]]*\"?([^\"]*)\"?$/\\1/"
+    fi
+}
+
+get_token_from_config() {
+    get_value_from_config "token"
+}
+
+get_agent_image_from_config() {
+    # Use controller_image and controller_image_tag from config file, default to the public image
+    local image tag
+    image=$(get_value_from_config "controller_image")
+    tag=$(get_value_from_config "controller_image_tag")
+    echo "${image:-$DEFAULT_CONTROLLER_IMAGE}:${tag:-$DEFAULT_CONTROLLER_IMAGE_TAG}"
+}
+
+get_pull_policy_from_config() {
+    # Pull new agent images unless pull_new_agent_images is explicitly disabled in config file
+    local pull
+    pull=$(get_value_from_config "pull_new_agent_images" | tr '[:upper:]' '[:lower:]')
+    if [[ -z "$pull" || "$pull" == "true" ]]; then
+        echo "always"
+    else
+        echo "never"
     fi
 }
 
@@ -126,6 +155,10 @@ set_environment() {
         echo "No token found in $CONFIG_FILE"
         exit 1
     fi
+
+    # get the agent image from config file
+    AGENT_IMAGE=$(get_agent_image_from_config)
+    PULL_POLICY=$(get_pull_policy_from_config)
 
     # extract controller id from token and validate
     DECODED_TOKEN=$(printf "%s" "$TOKEN" | base64 -d 2>/dev/null)
@@ -586,7 +619,7 @@ start_agent() {
     $RUN_CMD run \
         -d \
         --restart "on-failure:3" \
-        --pull "always" \
+        --pull "$PULL_POLICY" \
         --memory=2048m \
         "${LABEL_ARGS[@]}" \
         --security-opt label=disable \
