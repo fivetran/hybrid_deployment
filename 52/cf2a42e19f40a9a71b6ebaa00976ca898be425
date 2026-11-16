@@ -1,0 +1,34 @@
+agent/templates/deployment.yaml
+  s_333ee38df90a88::t_6fddef0d18ba74 28-31
+agent/README.md
+  s_333ee38df90a88::t_c70a6a73c7d9a8 46,73,181,197-212
+  s_333ee38df90a88::t_c213f571126af5 213
+agent/templates/_helpers.tpl
+  s_333ee38df90a88::t_6fddef0d18ba74 33-51
+agent/templates/image-pull-secret.yaml
+  s_333ee38df90a88::t_6fddef0d18ba74 1-13
+agent/templates/pre-delete-hook.yaml
+  s_333ee38df90a88::t_6fddef0d18ba74 22-25
+agent/templates/configmap.yaml
+  s_333ee38df90a88::t_6fddef0d18ba74 11
+agent/Chart.yaml
+  s_333ee38df90a88::t_c70a6a73c7d9a8 6-7
+agent/values.schema.json
+  s_333ee38df90a88::t_c70a6a73c7d9a8 90-106,109-123
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "52cf2a42e19f40a9a71b6ebaa00976ca898be425",
+  "prompts": {},
+  "sessions": {
+    "s_333ee38df90a88": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "13c3a9ce-0fac-4ba2-8422-cbd267081a78",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Victor Pechorin <victor.pechorin@fivetran.com>"
+    }
+  }
+}
