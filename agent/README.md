@@ -194,23 +194,6 @@ config:
 
 > **Note:** The above is purely an example. Only set `extra_hosts` if requested by Fivetran Support, or if a DNS override is required.
 
-## Private agent image registry
-
-To pull the agent image from a registry that requires authentication, set `agent.image` to your image and configure the registry credentials under `config`:
-
-```yaml
-config:
-  image_registry_agent: "registry.example.com"
-  image_registry_agent_auth: "CUSTOM_USERNAMEPASSWORD"
-  image_registry_auth_agent_username: "USERNAME_HERE"
-  image_registry_auth_agent_password: "PASSWORD_HERE"
-
-agent:
-  image: "registry.example.com/fivetran/ldp-agent:production"
-```
-
-When `image_registry_agent_auth` is `CUSTOM_USERNAMEPASSWORD`, the chart creates a `<release-name>-agent-regcred` image pull secret and uses it for the agent pod.
-
 ## PodDisruptionBudgets
 
 By default, the chart creates PodDisruptionBudgets (PDBs) for both the agent (`hd-agent-pdb`, `minAvailable: 1`) and the data processing jobs (`hd-job-pdb`, `minAvailable: 1`). If your environment does not require PDBs, you can disable them:
