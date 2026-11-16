@@ -19,6 +19,10 @@ spec:
     spec:
       serviceAccountName: hd-agent-sa
       restartPolicy: Never
+      {{- if include "hd.agentRegistryAuthEnabled" . }}
+      imagePullSecrets:
+        - name: {{ include "hd.agentImagePullSecretName" . }}
+      {{- end }}
       containers:
         - name: hd-agent-secret-cleanup
           image: {{ if .Values.agent.image }}{{ .Values.agent.image }}{{ else }}{{ .Values.image }}{{ end }}

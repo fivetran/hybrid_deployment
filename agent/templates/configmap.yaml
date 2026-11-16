@@ -8,7 +8,7 @@ metadata:
     {{- include "hd.labels" . | nindent 4 }}
 data:
 {{- range $key, $value := .Values.config }}
-  {{- if ne $key "token" }}
+  {{- if not (has $key (list "token" "image_registry_auth_agent_password")) }}
     {{- if eq $key "kubernetes_affinity" }}
   {{ $key }}: {{ $value | toJson | quote }}
     {{- else if or (kindIs "map" $value) (kindIs "slice" $value) }}

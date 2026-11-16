@@ -43,7 +43,7 @@ helm upgrade --install hd-agent \
  --set config.data_volume_pvc=YOUR_PERSISTENT_VOLUME_CLAIM \
  --set config.token="YOUR_TOKEN_HERE" \
  --set config.namespace=fivetran \
- --version 0.28.0
+ --version 0.29.0
  ```
 
 > Notes:
@@ -70,7 +70,7 @@ helm upgrade --install hd-agent \
  -f values.yaml \
  --create-namespace \
  --namespace fivetran \
- --version 0.28.0
+ --version 0.29.0
 ```
 
 Example values file:
@@ -178,7 +178,7 @@ helm upgrade --install hd-agent \
  --set agent.jvm_xmx=1024m \
  --create-namespace \
  --namespace fivetran \
- --version 0.28.0
+ --version 0.29.0
 ```
 
 > **Note:** JVM memory values support standard Java memory units (e.g., 800m, 1g, 2G). Ensure the JVM memory settings are appropriate for your container memory limits and that both values match for optimal performance.
@@ -193,6 +193,23 @@ config:
 ```
 
 > **Note:** The above is purely an example. Only set `extra_hosts` if requested by Fivetran Support, or if a DNS override is required.
+
+## Private agent image registry
+
+To pull the agent image from a registry that requires authentication, set `agent.image` to your image and configure the registry credentials under `config`:
+
+```yaml
+config:
+  image_registry_agent: "registry.example.com"
+  image_registry_agent_auth: "CUSTOM_USERNAMEPASSWORD"
+  image_registry_auth_agent_username: "USERNAME_HERE"
+  image_registry_auth_agent_password: "PASSWORD_HERE"
+
+agent:
+  image: "registry.example.com/fivetran/ldp-agent:production"
+```
+
+When `image_registry_agent_auth` is `CUSTOM_USERNAMEPASSWORD`, the chart creates a `<release-name>-agent-regcred` image pull secret and uses it for the agent pod.
 
 ## PodDisruptionBudgets
 

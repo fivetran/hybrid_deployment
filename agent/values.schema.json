@@ -87,7 +87,39 @@
           "type": "object",
           "description": "Map of affinity rule names to their rule definitions. At least one rule name key is required when kubernetes_affinity is non-empty.",
           "default": {}
+        },
+        "image_registry_agent": {
+          "type": "string",
+          "description": "Registry host of the agent image (e.g. registry.example.com). Used as the auth key of the agent image pull secret."
+        },
+        "image_registry_agent_auth": {
+          "type": "string",
+          "description": "Agent image registry auth type. CUSTOM_USERNAMEPASSWORD creates an image pull secret for the agent.",
+          "default": "NONE"
+        },
+        "image_registry_auth_agent_username": {
+          "type": "string",
+          "description": "Agent image registry username, used when image_registry_agent_auth is CUSTOM_USERNAMEPASSWORD"
+        },
+        "image_registry_auth_agent_password": {
+          "type": "string",
+          "description": "Agent image registry password, used when image_registry_agent_auth is CUSTOM_USERNAMEPASSWORD"
         }
+      },
+      "if": {
+        "properties": {
+          "image_registry_agent_auth": {
+            "const": "CUSTOM_USERNAMEPASSWORD"
+          }
+        },
+        "required": ["image_registry_agent_auth"]
+      },
+      "then": {
+        "required": [
+          "image_registry_agent",
+          "image_registry_auth_agent_username",
+          "image_registry_auth_agent_password"
+        ]
       },
       "required": ["data_volume_pvc"],
       "oneOf": [
