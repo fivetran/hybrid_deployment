@@ -25,6 +25,10 @@ spec:
         {{- include "hd.annotations" (dict "Values" .Values "annotations" (or .Values.agent.annotations .Values.config.deployment_annotations)) | nindent 8 }}
     spec:
       serviceAccountName: hd-agent-sa
+      {{- if include "hd.agentRegistryAuthEnabled" . }}
+      imagePullSecrets:
+        - name: {{ include "hd.agentImagePullSecretName" . }}
+      {{- end }}
       {{- if or .Values.agent.node_selector .Values.node_selector }}
       nodeSelector:
         {{- if .Values.agent.node_selector }}

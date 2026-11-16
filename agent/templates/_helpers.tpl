@@ -30,3 +30,22 @@
 {{- toYaml $extra }}
 {{- end }}
 {{- end }}
+
+{{- define "hd.agentRegistryAuthEnabled" -}}
+{{- if eq (.Values.config.image_registry_agent_auth | default "NONE") "CUSTOM_USERNAMEPASSWORD" }}true{{ end }}
+{{- end }}
+
+{{- define "hd.agentImagePullSecretName" -}}
+{{- printf "%s-agent-regcred" .Release.Name }}
+{{- end }}
+
+{{- define "hd.agentDockerConfigJson" -}}
+{{- with .Values.config }}
+{{- $registry := required "config.image_registry_agent is required when config.image_registry_agent_auth is CUSTOM_USERNAMEPASSWORD" .image_registry_agent }}
+{{- $username := required "config.image_registry_auth_agent_username is required when config.image_registry_agent_auth is CUSTOM_USERNAMEPASSWORD" .image_registry_auth_agent_username }}
+{{- $password := required "config.image_registry_auth_agent_password is required when config.image_registry_agent_auth is CUSTOM_USERNAMEPASSWORD" .image_registry_auth_agent_password }}
+{{- $auth := printf "%s:%s" $username $password | b64enc }}
+{{- $entry := dict "username" $username "password" $password "auth" $auth }}
+{{- dict "auths" (dict $registry $entry) | toJson }}
+{{- end }}
+{{- end }}
